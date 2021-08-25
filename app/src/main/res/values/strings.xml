@@ -3,4 +3,19 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Bluetooth</string>
     <string name="title_notifications">Communication</string>
+    <string name="bt_status_on">Bluetooth: Connected</string>
+    <string name="bt_status_off">Bluetooth: Not Connected</string>
+    <string name="button_discover">Make Device Discoverable</string>
+    <string name="paired_device_title">Paired Devices</string>
+    <string name="avail_device_title">Available Devices</string>
+    <string name="paired_device_none">No Paired Devices</string>
+    <string name="avail_device_none">No Available Devices</string>
+    <string name="bt_refresh_paired_btn">Refresh Paired Devices</string>
+    <string name="bt_scan_avail_btn">Scan Devices</string>
+    <string name="button_stop">Stop Scanning</string>
+    <string name="button_disconnect">Disconnect Bluetooth Device</string>
+    <string name="textview_incoming_text">Incoming Text</string>
+    <string name="textview_outgoing_text">Outgoing Text</string>
+    <string name="button_send_text">Send</string>
+    <string name="placeholder_send_text">Input outgoing text</string>
 </resources>

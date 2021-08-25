@@ -32,22 +32,19 @@ public class BluetoothService {
     private ConnectedThread mConnectedThread;
 
 
-    public static enum ConnectionState {
-        IDLE(0), // Connection: Idle
-        LISTEN(1), // Connection: Listening for incoming connections
-        CONNECTING(2), // Connection: Initiating an outgoing connection
-        CONNECTED(3), // Connection: Connected to a remote device
-        DISCONNECTED(4); // Connection: Disconnected from remote device
+    // Constants that indicate the current connection state
+    public static final int STATE_NONE = 0;       // we're doing nothing
+    public static final int STATE_LISTEN = 1;     // now listening for incoming connections
+    public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
+    public static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
-        public int value;
+    // Intent request codes
+    public static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
+    public static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
+    public static final int REQUEST_ENABLE_BT = 3;
 
-        ConnectionState(int i){
-            value = i;
-        }
-    }
-
-    private ConnectionState mCurrentState;
-    private ConnectionState mNewState;
+    private int mCurrentState;
+    private int mNewState;
 
     /**
      * Constructor: Prepares a new Bluetooth session
@@ -56,18 +53,18 @@ public class BluetoothService {
     public BluetoothService(Handler handler){
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mHandler = handler;
-        mNewState = mCurrentState = ConnectionState.IDLE;
+        mNewState = mCurrentState = STATE_NONE;
     }
 
     private synchronized void updateBluetoothStatus(){
-        Log.d(TAG, "Bluetooth Status updating from:  " + mNewState.toString() + " -> " + mCurrentState.toString());
+        Log.d(TAG, "Bluetooth Status updating from:  " + mNewState + " -> " + mCurrentState);
         mNewState = mCurrentState;
 
         // Give Handler the new state to update UI Activity
-        mHandler.obtainMessage(Constants.MESSAGE_STATE_CHANGE, mNewState.value, -1).sendToTarget();
+        mHandler.obtainMessage(Constants.MESSAGE_STATE_CHANGE, mNewState, -1).sendToTarget();
     }
 
-    public synchronized ConnectionState getState(){ return mCurrentState; }
+    public synchronized int getState(){ return mCurrentState; }
 
     /**
      * Start the ConnectThread to initiate a connection to a remote device.
@@ -78,7 +75,7 @@ public class BluetoothService {
         Log.d(TAG, "connect to: " + device);
 
         // Cancel any thread attempting to make a connection
-        if (mCurrentState == ConnectionState.CONNECTING) {
+        if (mCurrentState == STATE_CONNECTING) {
             if (mConnectThread != null) {
                 mConnectThread.cancel();
                 mConnectThread = null;
@@ -152,7 +149,7 @@ public class BluetoothService {
         ConnectedThread r;
         // Synchronize a copy of the ConnectedThread
         synchronized (this) {
-            if (mCurrentState != ConnectionState.CONNECTED) return;
+            if (mCurrentState != STATE_CONNECTED) return;
             r = mConnectedThread;
         }
         // Perform the write unsynchronized
@@ -176,7 +173,7 @@ public class BluetoothService {
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
-        mCurrentState = ConnectionState.IDLE;
+        mCurrentState = STATE_NONE;
         // Update UI title
         updateBluetoothStatus();
 
@@ -236,7 +233,7 @@ public class BluetoothService {
             mInsecureAcceptThread.cancel();
             mInsecureAcceptThread = null;
         }
-        mCurrentState = ConnectionState.IDLE;
+        mCurrentState = STATE_NONE;
         updateBluetoothStatus(); // Update UI title
     }
 
@@ -261,7 +258,7 @@ public class BluetoothService {
                 //Log.e(TAG, "Socket Type: " + mSocketType + "create() failed", e);
             }
             mmSocket = tmp;
-            mCurrentState = ConnectionState.CONNECTING;
+            mCurrentState = STATE_CONNECTING;
         }
 
         public void run() {
@@ -383,7 +380,7 @@ public class BluetoothService {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
-            mCurrentState = ConnectionState.CONNECTED;
+            mCurrentState = STATE_CONNECTED;
         }
 
         public void run() {
@@ -392,7 +389,7 @@ public class BluetoothService {
             int bytes;
 
             // Keep listening to the InputStream while connected
-            while (mCurrentState == ConnectionState.CONNECTED) {
+            while (mCurrentState == STATE_CONNECTED) {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
