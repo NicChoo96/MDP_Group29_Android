@@ -63,8 +63,6 @@ public class BluetoothFragment extends Fragment {
     private BluetoothComponent bluetoothComponent;
 
     // Relate to GUI
-    private TextView btTextView;
-    private Toolbar btToolbar;
     private ListView lvPairedDevices, lvAvailDevices;
     private TextView tvNoPairDevices, tvNoAvailDevices;
     private Button btnDiscover, btnScan, btnRefresh, btnDisconnect;
@@ -104,14 +102,7 @@ public class BluetoothFragment extends Fragment {
 
         //main.setContentView(R.layout.fragment_bluetooth);
 
-        // Bluetooth Status Toolbar
-        btTextView = view.findViewById(R.id.tvBluetoothStatus);
-        btToolbar = view.findViewById(R.id.btToolbar);
-
         main = getActivity();
-
-        bluetoothComponent = BluetoothComponent.getInstance(main, mHandler);
-        bluetoothComponent.setbReceiver(bReceiver);
 
         // Relate to UI
         lvPairedDevices = view.findViewById(R.id.lvPairedDevices);
@@ -173,7 +164,6 @@ public class BluetoothFragment extends Fragment {
         });
 
 
-        updateBluetoothTBStatus();
 
         // Get Bluetooth Adapter
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -192,6 +182,14 @@ public class BluetoothFragment extends Fragment {
             }
         }
 
+        bluetoothComponent = BluetoothComponent.getInstance(main, mHandler);
+        bluetoothComponent.updateBluetoothTBStatus();
+        bluetoothService = bluetoothComponent.getBluetoothService();
+        bluetoothComponent.setbReceiver(bReceiver);
+
+        if(bluetoothService.getState() == BluetoothService.STATE_CONNECTED)
+            btnDisconnect.setVisibility(View.VISIBLE);
+
         // Register broadcast receivers
         bluetoothComponent.registerBroadcastReceivers();
     }
@@ -199,7 +197,7 @@ public class BluetoothFragment extends Fragment {
     private void connectionUpdateSequence(boolean isConnected){
         if(isConnected){
             bluetoothComponent.setDeviceName(device);
-            updateBluetoothTBStatus();
+            bluetoothComponent.updateBluetoothTBStatus();
             btnDisconnect.setVisibility(View.VISIBLE);
             bluetoothComponent.isConnected = true;
         }else{
@@ -217,18 +215,6 @@ public class BluetoothFragment extends Fragment {
         if (permissionCheck != 0)
             main.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION}, 1001);
-    }
-
-    // Update the Bluetooth Toolbar
-    public void updateBluetoothTBStatus() {
-        if (bluetoothComponent.isConnected) {
-            device = bluetoothComponent.getDeviceName();
-            btToolbar.setBackgroundColor(ContextCompat.getColor(main.getApplicationContext(), R.color.green));
-            btTextView.setText(getString(R.string.bt_status_on) + ": " + device);
-        } else {
-            btToolbar.setBackgroundColor(ContextCompat.getColor(main.getApplicationContext(), R.color.grey));
-            btTextView.setText(getString(R.string.bt_status_off));
-        }
     }
 
     // C2 - Initiate Scanning
@@ -345,6 +331,7 @@ public class BluetoothFragment extends Fragment {
     public void connectBluetoothDevice(String address) {
         final BluetoothDevice deviceMac = bluetoothAdapter.getRemoteDevice(address);
         bluetoothService = new BluetoothService(mHandler);
+        bluetoothComponent.setBluetoothService(bluetoothService);
         // Connect to device that was clicked
         bluetoothService.connect(deviceMac, false);
 
@@ -379,31 +366,22 @@ public class BluetoothFragment extends Fragment {
                         // Bluetooth Service: Connected to device
                         case BluetoothService.STATE_CONNECTED:
                             Log.d("Handler Log: ", "STATE_CONNECTED");
-                            //registerLocalReceivers();
                             connectionUpdateSequence(true);
                             break;
                         // Bluetooth Service: Connecting to device
                         case BluetoothService.STATE_CONNECTING:
                             Log.d("Handler Log: ", "STATE_CONNECTING");
-                            // Set empty string since no device is connected currently
-                            //singletonDevice.setDeviceName(device);
                             showToast("Connecting...");
-                            // Send string to MainActivity that no devices connected currently
                             connectionUpdateSequence(false);
                             break;
                         // Bluetooth Service: Listening for devices
                         case BluetoothService.STATE_LISTEN:
                             Log.d("Handler Log: ", "STATE_LISTEN");
-                            // Set empty string since no device is connected currently
-                            // Send string to MainActivity that no devices connected currently
                             connectionUpdateSequence(false);
                         case BluetoothService.STATE_NONE:
-                            Log.d("Handler Log: ", "STATE_NONE");
-                            // Set empty string since no device is connected currently
                             connectionUpdateSequence(false);
-                            updateBluetoothTBStatus();
+                            bluetoothComponent.updateBluetoothTBStatus();
                             btnDisconnect.setVisibility(View.GONE);
-                            // Send string to MainActivity that no devices connected currently
                             break;
 //                        // C8 - Reconnection of Bluetooth device
 //                        case BluetoothService.STATE_NONE:
@@ -425,11 +403,11 @@ public class BluetoothFragment extends Fragment {
                     // Save the connected device's name
                     device = msg.getData().getString(Constants.DEVICE_NAME);
                     Log.d("Handler Log: ", "MESSAGE_DEVICE_NAME - " + device);
-                    if (null != main.getApplicationContext()) {
+                    if (main.getApplicationContext() != null) {
                         if (device != null) {
                             showToast("Connected to: " + device);
                             connectionUpdateSequence(true);
-                            updateBluetoothTBStatus();
+                            bluetoothComponent.updateBluetoothTBStatus();
                             progress.dismiss();
                             // Send device name currently connected to MainActivity
 //                            Intent i = new Intent(BluetoothActivity.this,
@@ -440,12 +418,12 @@ public class BluetoothFragment extends Fragment {
                     break;
                 case Constants.MESSAGE_TOAST:
                     Log.d("Handler Log: ", "MESSAGE_TOAST");
-                    if (null != main.getApplicationContext()) {
+                    if (main.getApplicationContext() != null) {
                         String theMsg = msg.getData().getString(Constants.TOAST);
                         if (theMsg.equalsIgnoreCase("device connection was lost")) {
                             showToast(theMsg);
                             // Send string to MainActivity that devices lost connection
-                            updateBluetoothTBStatus();
+                            bluetoothComponent.updateBluetoothTBStatus();
                             // Send message to MainActivity that no device currently connected
                             bluetoothComponent.setDeviceName("");
                         }

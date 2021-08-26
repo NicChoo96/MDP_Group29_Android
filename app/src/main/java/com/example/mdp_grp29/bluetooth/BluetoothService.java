@@ -26,7 +26,7 @@ public class BluetoothService {
     private final UUID UUID_INSECURE = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     private final BluetoothAdapter mAdapter;
-    private final Handler mHandler;
+    private Handler mHandler;
     private AcceptThread mSecureAcceptThread, mInsecureAcceptThread;
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
@@ -54,6 +54,10 @@ public class BluetoothService {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mHandler = handler;
         mNewState = mCurrentState = STATE_NONE;
+    }
+
+    public void setNewHandler(Handler mHandler){
+        this.mHandler = mHandler;
     }
 
     private synchronized void updateBluetoothStatus(){
