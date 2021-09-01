@@ -6,12 +6,16 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.os.Handler;
+import android.widget.Adapter;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 
 import com.example.mdp_grp29.R;
+
+import java.util.ArrayList;
 
 public class BluetoothComponent {
 
@@ -24,6 +28,9 @@ public class BluetoothComponent {
     private Toolbar btToolbar;
     private TextView btTextView;
     public static StringBuffer mOutStringBuffer;
+
+    private ArrayList<String> persistentIncomingComms;
+    private ArrayList<String> persistentOutgoingComms;
 
     public static BluetoothComponent getInstance(Activity main, Handler mHandler){
         if(instance == null)
@@ -39,12 +46,38 @@ public class BluetoothComponent {
         this.main = main;
         btToolbar = main.findViewById(R.id.btToolbar);
         btTextView = main.findViewById(R.id.tvBluetoothStatus);
+        persistentIncomingComms = new ArrayList<String>();
+        persistentOutgoingComms = new ArrayList<String>();
         if(this.bluetoothService == null){
             mOutStringBuffer = new StringBuffer();
             this.bluetoothService = new BluetoothService(mHandler);
         }
         else
             this.bluetoothService.setNewHandler(mHandler);
+    }
+
+    public ArrayList<String> getPersistentOutgoingComms(){
+        return persistentOutgoingComms;
+    }
+
+    public ArrayList<String> getPersistentIncomingComms(){
+        return persistentIncomingComms;
+    }
+
+    public void storePersistentCommsData(ArrayAdapter<String> incomingComms, ArrayAdapter<String> outgoingComms){
+
+        if(persistentIncomingComms == null)
+            persistentIncomingComms = new ArrayList<String>();
+
+        if(persistentOutgoingComms == null)
+            persistentOutgoingComms = new ArrayList<String>();
+
+        for(int i = persistentIncomingComms.size(); i < incomingComms.getCount(); i++){
+            persistentIncomingComms.add(incomingComms.getItem(i));
+        }
+        for(int i = persistentOutgoingComms.size(); i < outgoingComms.getCount(); i++){
+            persistentOutgoingComms.add(outgoingComms.getItem(i));
+        }
     }
 
     // Update the Bluetooth Toolbar

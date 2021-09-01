@@ -29,6 +29,8 @@ import com.example.mdp_grp29.bluetooth.BluetoothComponent;
 import com.example.mdp_grp29.bluetooth.BluetoothService;
 import com.example.mdp_grp29.databinding.FragmentCommunicationBinding;
 
+import java.util.ArrayList;
+
 public class CommunicationFragment extends Fragment {
 
     private CommunicationViewModel communicationViewModel;
@@ -75,10 +77,14 @@ public class CommunicationFragment extends Fragment {
         outgoingMessageArrayAdapter = new ArrayAdapter<>(getActivity().getApplicationContext(), R.layout.messages);
         outgoingMessageLV.setAdapter(outgoingMessageArrayAdapter);
 
+        bluetoothComponent = BluetoothComponent.getInstance(getActivity(), mHandler);
+
+        populateExistingArrayAdapter(incomingMessageArrayAdapter, bluetoothComponent.getPersistentIncomingComms());
+        populateExistingArrayAdapter(outgoingMessageArrayAdapter, bluetoothComponent.getPersistentOutgoingComms());
+
         send_text_button = view.findViewById(R.id.send_text_button);
         outgoing_text_edit = view.findViewById(R.id.outgoing_text_edit);
 
-        bluetoothComponent = BluetoothComponent.getInstance(getActivity(), mHandler);
 
         // Get sent text from CommunicationFragment
         // C1 - Main functionality to transmit message
@@ -103,6 +109,12 @@ public class CommunicationFragment extends Fragment {
             }
         });
 
+    }
+
+    private void populateExistingArrayAdapter(ArrayAdapter<String> arrayAdapter, ArrayList<String> arrayList){
+        for(int i = 0; i < arrayList.size(); i++){
+            arrayAdapter.add(arrayList.get(i));
+        }
     }
 
     private void connectionUpdateSequence(boolean isConnected){
@@ -186,6 +198,7 @@ public class CommunicationFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        bluetoothComponent.storePersistentCommsData(incomingMessageArrayAdapter, outgoingMessageArrayAdapter);
         super.onDestroyView();
         Log.e(TAG, "Communication Destroyed");
         binding = null;
