@@ -79,8 +79,9 @@ public class CommunicationFragment extends Fragment {
 
         bluetoothComponent = BluetoothComponent.getInstance(getActivity(), mHandler);
 
-        populateExistingArrayAdapter(incomingMessageArrayAdapter, bluetoothComponent.getPersistentIncomingComms());
-        populateExistingArrayAdapter(outgoingMessageArrayAdapter, bluetoothComponent.getPersistentOutgoingComms());
+        // Persist the view communication data after it got switched back to the communication page
+        populateExistingArrayAdapter(incomingMessageLV, incomingMessageArrayAdapter, bluetoothComponent.getPersistentIncomingComms());
+        populateExistingArrayAdapter(outgoingMessageLV, outgoingMessageArrayAdapter, bluetoothComponent.getPersistentOutgoingComms());
 
         send_text_button = view.findViewById(R.id.send_text_button);
         outgoing_text_edit = view.findViewById(R.id.outgoing_text_edit);
@@ -103,18 +104,21 @@ public class CommunicationFragment extends Fragment {
                     // Send message out
                     bluetoothComponent.getBluetoothService().write(outgoingText.getBytes());
                     outgoingMessageArrayAdapter.add(outgoingText);
+                    outgoingMessageLV.setSelection(outgoingMessageArrayAdapter.getCount()-1);
                     // Reset string buffer
                     BluetoothComponent.mOutStringBuffer.setLength(0);
                 }
             }
         });
-
     }
 
-    private void populateExistingArrayAdapter(ArrayAdapter<String> arrayAdapter, ArrayList<String> arrayList){
+    private void populateExistingArrayAdapter(ListView listView, ArrayAdapter<String> arrayAdapter, ArrayList<String> arrayList){
+        if(arrayList.size() == 0)
+            return;
         for(int i = 0; i < arrayList.size(); i++){
             arrayAdapter.add(arrayList.get(i));
         }
+        listView.setSelection(arrayAdapter.getCount() - 1);
     }
 
     private void connectionUpdateSequence(boolean isConnected){
@@ -177,6 +181,7 @@ public class CommunicationFragment extends Fragment {
                     // Add incoming message to incoming list view
                     Log.d(TAG, readMessage);
                     incomingMessageArrayAdapter.add(readMessage);
+                    incomingMessageLV.setSelection(incomingMessageArrayAdapter.getCount()-1);
                     Log.d("Handler Log: ", "MESSAGE_READ - " + readMessage);
                     break;
                 case Constants.MESSAGE_TOAST:

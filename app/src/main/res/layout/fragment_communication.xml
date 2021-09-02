@@ -8,20 +8,23 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="320dp"
             android:layout_marginStart="25dp"
             android:layout_marginTop="20dp"
             android:layout_marginEnd="25dp"
-            android:orientation="vertical">
+            android:background="#F6F6F6"
+            android:orientation="vertical"
+            android:padding="10dp">
 
             <TextView
                 android:id="@+id/textView"
@@ -34,7 +37,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
                 <EditText
@@ -54,21 +57,25 @@
                     android:layout_marginStart="10dp"
                     android:text="@string/button_send_text"
                     tools:ignore="TouchTargetSizeCheck" />
+
             </LinearLayout>
 
             <ListView
                 android:id="@+id/outgoingMessageLV"
                 android:layout_width="match_parent"
-                android:layout_height="150dp" />
+                android:layout_height="200dp" />
+
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="300dp"
             android:layout_marginStart="25dp"
             android:layout_marginTop="20dp"
             android:layout_marginEnd="25dp"
-            android:orientation="vertical">
+            android:background="#F6F6F6"
+            android:orientation="vertical"
+            android:padding="10dp">
 
             <TextView
                 android:id="@+id/textView2"
