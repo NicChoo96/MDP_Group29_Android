@@ -5,19 +5,24 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
 
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.view.MotionEventCompat;
 
 public class ArenaView extends View {
+
+    private final String TAG = "ArenaView";
+
     private final int NUM_COLUMNS = 20;
     private final int NUM_ROWS = 20;
     private int CELL_SIZE;
 
     private Paint mapPaint;
-    private Paint mapPaint2;
     private Paint whitePaint;
     private Paint blackPaint;
 
@@ -112,17 +117,66 @@ public class ArenaView extends View {
 //        displayImageIdentified(canvas);
     }
 
-    private void viewMovement(MotionEvent event){
-        if(event.getAction() == MotionEvent.ACTION_MOVE)
-        {
-            
-            invalidate();
+    private void ViewMovement(MotionEvent event){
+        float currentX, currentY, lastX, lastY;
+        int mActivePointerOne;
+        int mActivePointerTwo;
+
+        if(event.getPointerCount() == 2){
+            switch(event.getAction()){
+                case MotionEvent.ACTION_DOWN:
+                    mActivePointerOne = event.getPointerId(0);
+                    mActivePointerTwo = event.getPointerId(1);
+
+                    lastX = event.getX(mActivePointerOne);
+                    lastY = event.getY(mActivePointerOne);
+                    Log.d(TAG, "X: " + lastX +
+                            ", Y: " + lastY + ", index: " + mActivePointerOne);
+
+
+                    lastX = event.getX(mActivePointerTwo);
+                    lastY = event.getY(mActivePointerTwo);
+                    Log.d(TAG, "X: " + lastX +
+                            ", Y: " + lastY + ", index: " + mActivePointerTwo);
+                    //invalidate();
+                    break;
+                case MotionEvent.ACTION_MOVE:
+
+                    mActivePointerOne = event.getPointerId(0);
+                    mActivePointerTwo = event.getPointerId(1);
+
+                    lastX = event.getX(mActivePointerOne);
+                    lastY = event.getY(mActivePointerOne);
+
+                    Log.d(TAG, "X: " + lastX +
+                            ", Y: " + lastY + ", index: " + mActivePointerOne);
+
+
+                    lastX = event.getX(mActivePointerTwo);
+                    lastY = event.getY(mActivePointerTwo);
+                    Log.d(TAG, "X: " + lastX +
+                            ", Y: " + lastY + ", index: " + mActivePointerTwo);
+                    break;
+            }
+        }
+    }
+
+    private void DragObstacle(MotionEvent event){
+        if(event.getPointerCount() == 1){
+            switch(event.getAction()){
+                case MotionEvent.ACTION_DOWN:
+
+                    break;
+                case MotionEvent.ACTION_MOVE:
+
+                    break;
+            }
         }
     }
 
     // C6- Touch Gesture
     public boolean onTouchEvent(MotionEvent event) {
-
+        ViewMovement(event);
 //        // Place Robot Position
 //        if (!mapFragment.getEnablePlotRobotPosition()) {
 //            int x = 0;
