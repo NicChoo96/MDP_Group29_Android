@@ -29,7 +29,6 @@ public class HomeFragment extends Fragment {
         View root = binding.getRoot();
 
 
-
         //getActivity().setContentView(R.layout.fragment_home);
         return root;
     }

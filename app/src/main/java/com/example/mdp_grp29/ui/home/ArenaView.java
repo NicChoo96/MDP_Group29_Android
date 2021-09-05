@@ -11,8 +11,6 @@ import android.view.View;
 import android.widget.RelativeLayout;
 
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintSet;
-import androidx.core.view.MotionEventCompat;
 
 public class ArenaView extends View {
 
@@ -20,7 +18,7 @@ public class ArenaView extends View {
 
     private final int NUM_COLUMNS = 20;
     private final int NUM_ROWS = 20;
-    private int CELL_SIZE;
+    private float CELL_SIZE;
 
     private Paint mapPaint;
     private Paint whitePaint;
@@ -28,6 +26,13 @@ public class ArenaView extends View {
 
     private int centerViewX, centerViewY;
     private int viewScale;
+
+    private float zoomScale = 1f;
+    private float originalScale;
+    private float previousZoomDist = 0f;
+    private float currentZoomDist = 0f;
+    private Vector2D currentCenter = new Vector2D(0,0);
+    private Vector2D previousCenter = new Vector2D(0,0);
 
     // Constructor
     public ArenaView(Context context, @Nullable AttributeSet attrs) {
@@ -72,6 +77,7 @@ public class ArenaView extends View {
 
         // Calculate the Cell Size based on the canvas
         CELL_SIZE = getWidth() / NUM_COLUMNS;
+        originalScale = getWidth() / NUM_COLUMNS;
 
 //        if (cellWidth > cellHeight)
 //            cellWidth = cellHeight;
@@ -80,8 +86,8 @@ public class ArenaView extends View {
 //
 //        cellSize = cellHeight;
 
-        this.setLayoutParams(new RelativeLayout.LayoutParams(CELL_SIZE * NUM_COLUMNS,
-                CELL_SIZE * NUM_ROWS));
+        this.setLayoutParams(new RelativeLayout.LayoutParams((int)(CELL_SIZE * NUM_COLUMNS),
+                (int)(CELL_SIZE * NUM_ROWS)));
         invalidate();
     }
 
@@ -117,10 +123,30 @@ public class ArenaView extends View {
 //        displayImageIdentified(canvas);
     }
 
+    private class Vector2D{
+        public float x,y;
+        public Vector2D(float x, float y){
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    private float measureDistanceBetweenTwoPoints(Vector2D point1, Vector2D point2){
+        return (float)Math.sqrt(Math.pow((point1.x - point2.x), 2) + Math.pow((point1.y - point2.y), 2));
+    }
+
+    private Vector2D measureCenterBetweenTwoPoints(Vector2D point1, Vector2D point2){
+        Vector2D centerDist = new Vector2D((point1.x-point2.x)/2, (point1.y-point2.y)/2);
+        return new Vector2D(point1.x+centerDist.x, point1.y+centerDist.y);
+    }
+
     private void ViewMovement(MotionEvent event){
-        float currentX, currentY, lastX, lastY;
+        Vector2D previousFirst, previousSecond;
+        Vector2D currentFirst, currentSecond;
         int mActivePointerOne;
         int mActivePointerTwo;
+        final float distThreshold = 5f;
+        final float scaleStep = 2f;
 
         if(event.getPointerCount() == 2){
             switch(event.getAction()){
@@ -128,34 +154,51 @@ public class ArenaView extends View {
                     mActivePointerOne = event.getPointerId(0);
                     mActivePointerTwo = event.getPointerId(1);
 
-                    lastX = event.getX(mActivePointerOne);
-                    lastY = event.getY(mActivePointerOne);
-                    Log.d(TAG, "X: " + lastX +
-                            ", Y: " + lastY + ", index: " + mActivePointerOne);
+                    previousFirst = new Vector2D(event.getX(mActivePointerOne), event.getY(mActivePointerOne));
+                    previousSecond = new Vector2D(event.getX(mActivePointerTwo), event.getY(mActivePointerTwo));
+                    // Measure Distance for zooming
+                    previousZoomDist = measureDistanceBetweenTwoPoints(previousFirst, previousSecond);
+                    // Measure Distance for panning
+                    previousCenter = measureCenterBetweenTwoPoints(previousFirst, previousSecond);
 
-
-                    lastX = event.getX(mActivePointerTwo);
-                    lastY = event.getY(mActivePointerTwo);
-                    Log.d(TAG, "X: " + lastX +
-                            ", Y: " + lastY + ", index: " + mActivePointerTwo);
-                    //invalidate();
                     break;
                 case MotionEvent.ACTION_MOVE:
 
                     mActivePointerOne = event.getPointerId(0);
                     mActivePointerTwo = event.getPointerId(1);
 
-                    lastX = event.getX(mActivePointerOne);
-                    lastY = event.getY(mActivePointerOne);
+                    //
+                    currentFirst = new Vector2D(event.getX(mActivePointerOne), event.getY(mActivePointerOne));
+                    currentSecond = new Vector2D(event.getX(mActivePointerTwo), event.getY(mActivePointerTwo));
 
-                    Log.d(TAG, "X: " + lastX +
-                            ", Y: " + lastY + ", index: " + mActivePointerOne);
+                    // Perform functionality here
+
+                    currentZoomDist = measureDistanceBetweenTwoPoints(currentFirst, currentSecond);
+                    currentCenter = measureCenterBetweenTwoPoints(currentFirst, currentSecond);
+
+                    
+                    if(currentZoomDist > previousZoomDist + distThreshold){
+                        zoomScale += scaleStep;
+                    }else if(currentZoomDist < previousZoomDist - distThreshold){
+                        zoomScale -= scaleStep;
+                    }else{
+                        Log.d(TAG, "Same positions");
+                    }
+
+                    
 
 
-                    lastX = event.getX(mActivePointerTwo);
-                    lastY = event.getY(mActivePointerTwo);
-                    Log.d(TAG, "X: " + lastX +
-                            ", Y: " + lastY + ", index: " + mActivePointerTwo);
+                    // Replace old index coordinates with new ones
+                    previousFirst = currentFirst;
+                    previousSecond = currentSecond;
+                    previousZoomDist = measureDistanceBetweenTwoPoints(previousFirst, previousSecond);
+
+                    invalidate();
+
+                    break;
+                case MotionEvent.ACTION_UP:
+                    previousZoomDist = 0;
+                    currentZoomDist = 0;
                     break;
             }
         }
@@ -222,6 +265,10 @@ public class ArenaView extends View {
     private void drawGrid(Canvas canvas){
         boolean isWhite = true;
         float left, right, top, bottom;
+
+        CELL_SIZE = originalScale + zoomScale;
+
+        // Draw Grid Squares
         for (int i = 0; i <= NUM_COLUMNS - 1; i++){
             for (int j = 0; j <= NUM_ROWS - 1; j++){
                 if(isWhite){
@@ -238,6 +285,7 @@ public class ArenaView extends View {
             isWhite = !isWhite;
         }
 
+        // Draw Grid Lines
         for (int c = 0; c < NUM_COLUMNS + 1; c++)
             canvas.drawLine(c * CELL_SIZE, 0, c * CELL_SIZE, NUM_ROWS *
                     CELL_SIZE, blackPaint);
