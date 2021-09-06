@@ -55,6 +55,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
+                    android:backgroundTint="#92C37D"
                     android:text="@string/button_send_text"
                     tools:ignore="TouchTargetSizeCheck" />
 

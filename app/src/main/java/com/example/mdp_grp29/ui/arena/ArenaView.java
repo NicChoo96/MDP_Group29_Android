@@ -1,4 +1,4 @@
-package com.example.mdp_grp29.ui.home;
+package com.example.mdp_grp29.ui.arena;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -7,10 +7,14 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.RelativeLayout;
 
 import androidx.annotation.Nullable;
+
+import com.example.mdp_grp29.Vector2D;
+import com.example.mdp_grp29.arena_objects.Obstacles;
 
 public class ArenaView extends View {
 
@@ -24,15 +28,20 @@ public class ArenaView extends View {
     private Paint whitePaint;
     private Paint blackPaint;
 
-    private int centerViewX, centerViewY;
-    private int viewScale;
 
-    private float zoomScale = 1f;
+    private float zoomScale = 30f;
     private float originalScale;
-    private float previousZoomDist = 0f;
-    private float currentZoomDist = 0f;
-    private Vector2D currentCenter = new Vector2D(0,0);
-    private Vector2D previousCenter = new Vector2D(0,0);
+    private Vector2D minViewPort = new Vector2D(-1f, -1f);
+    private Vector2D maxViewPort = new Vector2D(300f, 300f);
+
+
+    private ScaleGestureDetector mScaleDetector;
+    private float mScaleFactor = 1.f;
+
+    public Obstacles obsArray;
+    public final int obstacleCount = 5;
+    private Vector2D[] initialObstaclePos = new Vector2D[obstacleCount];
+
 
     // Constructor
     public ArenaView(Context context, @Nullable AttributeSet attrs) {
@@ -68,37 +77,54 @@ public class ArenaView extends View {
 //
 //        // Display Maze
 //        createMaze();
-        invalidate();
-    }
 
 
-    protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
-        super.onSizeChanged(width, height, oldWidth, oldHeight);
 
-        // Calculate the Cell Size based on the canvas
-        CELL_SIZE = getWidth() / NUM_COLUMNS;
-        originalScale = getWidth() / NUM_COLUMNS;
-
-//        if (cellWidth > cellHeight)
-//            cellWidth = cellHeight;
-//        else
-//            cellHeight = cellWidth;
-//
-//        cellSize = cellHeight;
 
         this.setLayoutParams(new RelativeLayout.LayoutParams((int)(CELL_SIZE * NUM_COLUMNS),
                 (int)(CELL_SIZE * NUM_ROWS)));
+        CELL_SIZE = getWidth() / NUM_COLUMNS - 10;
+        originalScale = getWidth() / NUM_COLUMNS - 5f;
+
+        mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+
+        for(int i = 0; i < obstacleCount; i++){
+            initialObstaclePos[i] = new Vector2D(25f, (i*2) + 6f);
+        }
+        obsArray = new Obstacles(initialObstaclePos);
+
         invalidate();
     }
 
-    // Create Canvas for Maze
+    public void ResetArenaView()
+    {
+        mScaleFactor = 1.f;
+        invalidate();
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+
+        canvas.save();
+        canvas.scale(mScaleFactor, mScaleFactor);
+
+        if (mScaleDetector.isInProgress()) {
+
+            canvas.scale(mScaleFactor, mScaleFactor, mScaleDetector.getFocusX() * 2f, mScaleDetector.getFocusY() * 2f);
+        }
+        else{
+            canvas.scale(mScaleFactor, mScaleFactor);
+        }
+
         canvas.drawColor(Color.WHITE);
 
 //        // Create Grid and Grid Cell Border
         drawGrid(canvas);
+        drawObstacles(canvas);
+
+        canvas.restore();
+
 //
 //        // Create Start Zone of Robot Position
 //        // Note: Position Bottom Left = [0][0] and Robot Foot Print= [3][3]
@@ -123,91 +149,29 @@ public class ArenaView extends View {
 //        displayImageIdentified(canvas);
     }
 
-    private class Vector2D{
-        public float x,y;
-        public Vector2D(float x, float y){
-            this.x = x;
-            this.y = y;
+    private class ScaleListener
+            extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            mScaleFactor *= Math.round((detector.getScaleFactor()*100f))/100f;
+
+            // Don't let the object get too small or too large.
+            mScaleFactor = Math.max(1f, Math.min(mScaleFactor, 5.0f));
+
+            invalidate();
+            return true;
         }
-    }
-
-    private float measureDistanceBetweenTwoPoints(Vector2D point1, Vector2D point2){
-        return (float)Math.sqrt(Math.pow((point1.x - point2.x), 2) + Math.pow((point1.y - point2.y), 2));
-    }
-
-    private Vector2D measureCenterBetweenTwoPoints(Vector2D point1, Vector2D point2){
-        Vector2D centerDist = new Vector2D((point1.x-point2.x)/2, (point1.y-point2.y)/2);
-        return new Vector2D(point1.x+centerDist.x, point1.y+centerDist.y);
     }
 
     private void ViewMovement(MotionEvent event){
-        Vector2D previousFirst, previousSecond;
-        Vector2D currentFirst, currentSecond;
-        int mActivePointerOne;
-        int mActivePointerTwo;
-        final float distThreshold = 5f;
-        final float scaleStep = 2f;
-
-        if(event.getPointerCount() == 2){
-            switch(event.getAction()){
-                case MotionEvent.ACTION_DOWN:
-                    mActivePointerOne = event.getPointerId(0);
-                    mActivePointerTwo = event.getPointerId(1);
-
-                    previousFirst = new Vector2D(event.getX(mActivePointerOne), event.getY(mActivePointerOne));
-                    previousSecond = new Vector2D(event.getX(mActivePointerTwo), event.getY(mActivePointerTwo));
-                    // Measure Distance for zooming
-                    previousZoomDist = measureDistanceBetweenTwoPoints(previousFirst, previousSecond);
-                    // Measure Distance for panning
-                    previousCenter = measureCenterBetweenTwoPoints(previousFirst, previousSecond);
-
-                    break;
-                case MotionEvent.ACTION_MOVE:
-
-                    mActivePointerOne = event.getPointerId(0);
-                    mActivePointerTwo = event.getPointerId(1);
-
-                    //
-                    currentFirst = new Vector2D(event.getX(mActivePointerOne), event.getY(mActivePointerOne));
-                    currentSecond = new Vector2D(event.getX(mActivePointerTwo), event.getY(mActivePointerTwo));
-
-                    // Perform functionality here
-
-                    currentZoomDist = measureDistanceBetweenTwoPoints(currentFirst, currentSecond);
-                    currentCenter = measureCenterBetweenTwoPoints(currentFirst, currentSecond);
-
-                    
-                    if(currentZoomDist > previousZoomDist + distThreshold){
-                        zoomScale += scaleStep;
-                    }else if(currentZoomDist < previousZoomDist - distThreshold){
-                        zoomScale -= scaleStep;
-                    }else{
-                        Log.d(TAG, "Same positions");
-                    }
-
-                    
-
-
-                    // Replace old index coordinates with new ones
-                    previousFirst = currentFirst;
-                    previousSecond = currentSecond;
-                    previousZoomDist = measureDistanceBetweenTwoPoints(previousFirst, previousSecond);
-
-                    invalidate();
-
-                    break;
-                case MotionEvent.ACTION_UP:
-                    previousZoomDist = 0;
-                    currentZoomDist = 0;
-                    break;
-            }
-        }
+        if(event.getPointerCount() ==  2)
+            mScaleDetector.onTouchEvent(event);
     }
 
     private void DragObstacle(MotionEvent event){
         if(event.getPointerCount() == 1){
             switch(event.getAction()){
-                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_POINTER_DOWN:
 
                     break;
                 case MotionEvent.ACTION_MOVE:
@@ -219,7 +183,9 @@ public class ArenaView extends View {
 
     // C6- Touch Gesture
     public boolean onTouchEvent(MotionEvent event) {
+        // Let the ScaleGestureDetector inspect all events.
         ViewMovement(event);
+        return true;
 //        // Place Robot Position
 //        if (!mapFragment.getEnablePlotRobotPosition()) {
 //            int x = 0;
@@ -259,38 +225,56 @@ public class ArenaView extends View {
 //                invalidate();
 //            }
 //        }
-        return true;
+        //return true;
     }
 
     private void drawGrid(Canvas canvas){
         boolean isWhite = true;
-        float left, right, top, bottom;
-
+        float left, top, right, bottom;
+        final Vector2D viewOffSet = new Vector2D(30f, 30f);
         CELL_SIZE = originalScale + zoomScale;
 
         // Draw Grid Squares
         for (int i = 0; i <= NUM_COLUMNS - 1; i++){
             for (int j = 0; j <= NUM_ROWS - 1; j++){
+                left = i * CELL_SIZE + viewOffSet.x;
+                top = (NUM_ROWS - 1 - j) * CELL_SIZE + viewOffSet.y;
+                right = (i + 1) * CELL_SIZE + viewOffSet.x;
+                bottom = (NUM_ROWS - j) * CELL_SIZE + viewOffSet.y;
                 if(isWhite){
-                    canvas.drawRect(i * CELL_SIZE, (NUM_ROWS - 1 - j) * CELL_SIZE,
-                            (i + 1) * CELL_SIZE, (NUM_ROWS - j) * CELL_SIZE, whitePaint);
+                    canvas.drawRect(left , top, right, bottom, whitePaint);
                     isWhite = false;
                 }
                 else{
-                    canvas.drawRect(i * CELL_SIZE, (NUM_ROWS - 1 - j) * CELL_SIZE,
-                            (i + 1) * CELL_SIZE, (NUM_ROWS - j) * CELL_SIZE, mapPaint);
+                    canvas.drawRect(left , top, right, bottom, mapPaint);
                     isWhite = true;
                 }
             }
             isWhite = !isWhite;
         }
 
-        // Draw Grid Lines
-        for (int c = 0; c < NUM_COLUMNS + 1; c++)
-            canvas.drawLine(c * CELL_SIZE, 0, c * CELL_SIZE, NUM_ROWS *
-                    CELL_SIZE, blackPaint);
-        for (int r = 0; r < NUM_ROWS; r++)
-            canvas.drawLine(0, r * CELL_SIZE, NUM_COLUMNS * CELL_SIZE,
-                    r * CELL_SIZE, blackPaint);
+        for(int i = 0; i < NUM_COLUMNS; i++){
+            canvas.drawText((i+1)+"", i * CELL_SIZE + viewOffSet.x + 5f,
+                    viewOffSet.y - 4f, blackPaint);
+        }
+
+        for(int i = 0; i < NUM_ROWS; i++){
+            canvas.drawText((i+1)+"", viewOffSet.x - 20f,
+                    i * CELL_SIZE + viewOffSet.y + 15f, blackPaint);
+        }
+    }
+    
+    private void drawObstacles(Canvas canvas){
+        float left, top, right, bottom;
+
+        for(int i = 0; i < obsArray.obstacles.length; i++){
+            left = obsArray.obstacles[i].position.x * CELL_SIZE;
+            top = obsArray.obstacles[i].position.y * CELL_SIZE;
+            right = (obsArray.obstacles[i].position.x + 1) * CELL_SIZE;
+            bottom = (obsArray.obstacles[i].position.y + 1) * CELL_SIZE;
+
+            canvas.drawRect(left , top, right, bottom, blackPaint);
+            canvas.drawText(i+1+"", (left + right)/2f - 5f, (top + bottom)/2f + 5f, whitePaint);
+        }
     }
 }

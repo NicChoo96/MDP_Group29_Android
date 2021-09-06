@@ -18,4 +18,6 @@
     <string name="textview_outgoing_text">Outgoing Text</string>
     <string name="button_send_text">Send</string>
     <string name="placeholder_send_text">Input outgoing text</string>
+    <string name="send_obstacle_button">Send Obstacles</string>
+    <string name="start_button">Start</string>
 </resources>
