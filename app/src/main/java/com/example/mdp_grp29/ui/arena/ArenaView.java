@@ -161,14 +161,7 @@ public class ArenaView extends View {
 
         canvas.save();
 
-
-        if (mScaleDetector.isInProgress()) {
-
-            canvas.scale(mScaleFactor, mScaleFactor, mScaleDetector.getFocusX() * 2f, mScaleDetector.getFocusY() * 2f);
-        }
-        else{
-            canvas.scale(mScaleFactor, mScaleFactor);
-        }
+        canvas.scale(mScaleFactor, mScaleFactor, mScaleDetector.getFocusX() * 2f, mScaleDetector.getFocusY() * 2f);
 
         canvas.drawColor(Color.WHITE);
 
