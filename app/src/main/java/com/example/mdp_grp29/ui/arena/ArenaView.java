@@ -183,9 +183,7 @@ public class ArenaView extends View {
 //
 //        // Display Route Path
 //        drawRoutePath(canvas);
-//
-//        // Display Robot Position
-//        displayRobot(canvas);
+
 
 //
 //        // Display Explored Maze
@@ -208,25 +206,37 @@ public class ArenaView extends View {
             return true;
         }
     }
-
+    //
     public void MoveRobot(MoveArrow move){
+        boolean robotMoved = false;
         switch(move){
             case UP:
-                if(robotCar.robotPosition.y + 2 < NUM_ROWS)
+                if(robotCar.robotPosition.y + 2 < NUM_ROWS){
                     robotCar.robotPosition.y += 1;
+                    robotMoved = true;
+                }
                 break;
             case DOWN:
-                if(robotCar.robotPosition.y - 1 > 0)
+                if(robotCar.robotPosition.y - 1 > 0){
                     robotCar.robotPosition.y -= 1;
+                    robotMoved = true;
+                }
                 break;
             case LEFT:
-                if(robotCar.robotPosition.x - 1 > 0)
+                if(robotCar.robotPosition.x - 1 > 0){
                     robotCar.robotPosition.x -= 1;
+                    robotMoved = true;
+                }
                 break;
             case RIGHT:
-                if(robotCar.robotPosition.x + 2 < NUM_COLUMNS)
+                if(robotCar.robotPosition.x + 2 < NUM_COLUMNS){
                     robotCar.robotPosition.x += 1;
+                    robotMoved = true;
+                }
                 break;
+        }
+        if(robotMoved){
+            arenaFragment.sendRobotMovement(move);
         }
         invalidate();
     }
@@ -467,7 +477,7 @@ public class ArenaView extends View {
                     i * CELL_SIZE + arenaGridOffSet.y + 15f, blackPaint);
         }
     }
-    
+
     private void drawObstacles(Canvas canvas){
         float left, top, right, bottom;
 

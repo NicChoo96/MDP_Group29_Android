@@ -160,6 +160,23 @@ public class ArenaFragment extends Fragment {
         return obstacleCommand;
     }
 
+    public void sendRobotMovement(ArenaView.MoveArrow moveArrow){
+        switch(moveArrow){
+            case UP:
+                bluetoothComponent.sendBluetoothMessage(Command.FORWARD);
+                break;
+            case LEFT:
+                bluetoothComponent.sendBluetoothMessage(Command.LEFT);
+                break;
+            case RIGHT:
+                bluetoothComponent.sendBluetoothMessage(Command.RIGHT);
+                break;
+            case DOWN:
+                bluetoothComponent.sendBluetoothMessage(Command.BACK);
+                break;
+        }
+    }
+
     public final Handler mHandler = new Handler(Looper.myLooper()) {
         @Override
         public void handleMessage(Message msg) {
