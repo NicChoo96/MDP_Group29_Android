@@ -20,4 +20,5 @@
     <string name="placeholder_send_text">Input outgoing text</string>
     <string name="send_obstacle_button">Send Obstacles</string>
     <string name="start_button">Start</string>
+    <string name="status_header">Status History</string>
 </resources>

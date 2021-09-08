@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat;
 
 import com.example.mdp_grp29.R;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class BluetoothComponent {
@@ -23,7 +24,7 @@ public class BluetoothComponent {
     private Activity main;
     private BroadcastReceiver bReceiver = null;
     private BluetoothService bluetoothService = null;
-    public boolean isConnected = false;
+    private boolean isConnected = false;
     private String deviceName = "";
     private Toolbar btToolbar;
     private TextView btTextView;
@@ -82,6 +83,8 @@ public class BluetoothComponent {
 
     // Update the Bluetooth Toolbar
     public void updateBluetoothTBStatus() {
+        if(btToolbar == null)
+            return;
         if (isConnected) {
             btToolbar.setBackgroundColor(ContextCompat.getColor(main.getApplicationContext(), R.color.green));
             btTextView.setText(main.getString(R.string.bt_status_on) + ": " + deviceName);
@@ -91,11 +94,34 @@ public class BluetoothComponent {
         }
     }
 
+    public void sendBluetoothMessage(String message){
+        bluetoothService.write(message.getBytes());
+        mOutStringBuffer.setLength(0);
+    }
+
     public void setBluetoothService(BluetoothService bluetoothService) { this.bluetoothService = bluetoothService; }
     public BluetoothService getBluetoothService() { return this.bluetoothService; }
 
     public String getDeviceName(){ return deviceName; }
     public void setDeviceName(String deviceName) { this.deviceName = deviceName; }
+
+    public void setConnectionStatus(boolean isConnected){
+        // TODO: I can do reconnection from bluetoothService here
+        this.isConnected = isConnected;
+        connectionUpdateSequence();
+    }
+
+    public boolean getConnectionStatus()
+    {
+        return isConnected;
+    }
+
+    private void connectionUpdateSequence(){
+        if(isConnected)
+            updateBluetoothTBStatus();
+        else
+            setDeviceName("");
+    }
 
     // Method: Register broadcast receivers
     public void registerBroadcastReceivers() {

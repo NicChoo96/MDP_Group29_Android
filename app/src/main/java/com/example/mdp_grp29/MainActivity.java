@@ -5,6 +5,7 @@ import static androidx.fragment.app.FragmentKt.setFragmentResultListener;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.example.mdp_grp29.bluetooth.BluetoothComponent;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.annotation.NonNull;

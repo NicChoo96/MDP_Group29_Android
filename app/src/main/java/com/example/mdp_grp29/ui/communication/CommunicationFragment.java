@@ -35,7 +35,6 @@ public class CommunicationFragment extends Fragment {
 
     private CommunicationViewModel communicationViewModel;
     private FragmentCommunicationBinding binding;
-    private TextView textView;
     private ArrayAdapter<String> incomingMessageArrayAdapter, outgoingMessageArrayAdapter;
     private ListView incomingMessageLV, outgoingMessageLV;
     private Button send_text_button;
@@ -60,7 +59,6 @@ public class CommunicationFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState){
         super.onViewCreated(view, savedInstanceState);
 
-        textView = view.findViewById(R.id.textView2);
         communicationViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
@@ -76,12 +74,6 @@ public class CommunicationFragment extends Fragment {
         outgoingMessageLV = view.findViewById(R.id.outgoingMessageLV);
         outgoingMessageArrayAdapter = new ArrayAdapter<>(getActivity().getApplicationContext(), R.layout.messages);
         outgoingMessageLV.setAdapter(outgoingMessageArrayAdapter);
-
-        bluetoothComponent = BluetoothComponent.getInstance(getActivity(), mHandler);
-
-        // Persist the view communication data after it got switched back to the communication page
-        populateExistingArrayAdapter(incomingMessageLV, incomingMessageArrayAdapter, bluetoothComponent.getPersistentIncomingComms());
-        populateExistingArrayAdapter(outgoingMessageLV, outgoingMessageArrayAdapter, bluetoothComponent.getPersistentOutgoingComms());
 
         send_text_button = view.findViewById(R.id.send_text_button);
         outgoing_text_edit = view.findViewById(R.id.outgoing_text_edit);
@@ -102,7 +94,7 @@ public class CommunicationFragment extends Fragment {
                         return;
                     }
                     // Send message out
-                    bluetoothComponent.getBluetoothService().write(outgoingText.getBytes());
+                    bluetoothComponent.sendBluetoothMessage(outgoingText);
                     outgoingMessageArrayAdapter.add(outgoingText);
                     outgoingMessageLV.setSelection(outgoingMessageArrayAdapter.getCount()-1);
                     // Reset string buffer
@@ -112,6 +104,16 @@ public class CommunicationFragment extends Fragment {
         });
     }
 
+    @Override
+    public void onStart(){
+        super.onStart();
+        bluetoothComponent = BluetoothComponent.getInstance(getActivity(), mHandler);
+
+        // Persist the view communication data after it got switched back to the communication page
+        populateExistingArrayAdapter(incomingMessageLV, incomingMessageArrayAdapter, bluetoothComponent.getPersistentIncomingComms());
+        populateExistingArrayAdapter(outgoingMessageLV, outgoingMessageArrayAdapter, bluetoothComponent.getPersistentOutgoingComms());
+    }
+
     private void populateExistingArrayAdapter(ListView listView, ArrayAdapter<String> arrayAdapter, ArrayList<String> arrayList){
         if(arrayList.size() == 0)
             return;
@@ -119,17 +121,6 @@ public class CommunicationFragment extends Fragment {
             arrayAdapter.add(arrayList.get(i));
         }
         listView.setSelection(arrayAdapter.getCount() - 1);
-    }
-
-    private void connectionUpdateSequence(boolean isConnected){
-        if(isConnected){
-            //bluetoothComponent.setDeviceName(device);
-            bluetoothComponent.updateBluetoothTBStatus();
-            bluetoothComponent.isConnected = true;
-        }else{
-            bluetoothComponent.setDeviceName("");
-            bluetoothComponent.isConnected = false;
-        }
     }
 
     private void showToast(String message){
@@ -147,22 +138,21 @@ public class CommunicationFragment extends Fragment {
                         // Bluetooth Service: Connected to device
                         case BluetoothService.STATE_CONNECTED:
                             Log.d("Handler Log: ", "STATE_CONNECTED");
-                            connectionUpdateSequence(true);
+                            bluetoothComponent.setConnectionStatus(true);
                             break;
                         // Bluetooth Service: Connecting to device
                         case BluetoothService.STATE_CONNECTING:
                             Log.d("Handler Log: ", "STATE_CONNECTING");
                             showToast("Connecting...");
-                            connectionUpdateSequence(false);
+                            bluetoothComponent.setConnectionStatus(false);
                             break;
                         // Bluetooth Service: Listening for devices
                         case BluetoothService.STATE_LISTEN:
                             Log.d("Handler Log: ", "STATE_LISTEN");
-                            connectionUpdateSequence(false);
+                            bluetoothComponent.setConnectionStatus(false);
                         case BluetoothService.STATE_NONE:
                             Log.d("Handler Log: ", "STATE_NONE");
-                            connectionUpdateSequence(false);
-                            bluetoothComponent.updateBluetoothTBStatus();
+                            bluetoothComponent.setConnectionStatus(false);
                             break;
 //                        // C8 - Reconnection of Bluetooth device
                         // TODO: Investigate on Bluetooth Reconnection after connection lost
@@ -172,7 +162,7 @@ public class CommunicationFragment extends Fragment {
 //                            connectBluetoothDevice(previousConnectedAddress);
                     }
                     break;
-                    // TODO: To be relocated to BluetooComponent soon
+                    // TODO: To be relocated to BluetoothComponent soon
                 case Constants.MESSAGE_READ:
                     Log.d("Handler Log: ", "MESSAGE_READ");
                     byte[] readBuf = (byte[]) msg.obj;

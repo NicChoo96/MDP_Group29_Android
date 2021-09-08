@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:background="#F6F6F6"
+            android:background="@drawable/rounded_corner"
             android:orientation="vertical"
             android:paddingTop="10dp"
             android:paddingBottom="10dp">
@@ -42,6 +42,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
+                android:layout_marginTop="15dp"
                 android:layout_marginEnd="20dp"
                 android:backgroundTint="#2196F3"
                 android:text="@string/bt_refresh_paired_btn" />
@@ -49,6 +50,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:orientation="horizontal">
 
                 <TextView
@@ -108,7 +110,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:background="#F6F6F6"
+            android:background="@drawable/rounded_corner"
             android:orientation="vertical"
             android:paddingTop="10dp"
             android:paddingBottom="10dp">
@@ -119,6 +121,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginStart="20dp"
+                android:layout_marginTop="15dp"
                 android:layout_marginEnd="20dp"
                 android:backgroundTint="#2196F3"
                 android:text="@string/bt_scan_avail_btn" />
@@ -126,6 +129,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:orientation="horizontal">
 
                 <TextView
