@@ -21,9 +21,10 @@ public class Command {
     public static String STM32 = "AR,AN,";
 
     // Robot Movements
-    public static String LEFT = "L";
-    public static String RIGHT = "R";
+    public static String LEFT = "SL";
+    public static String RIGHT = "SR";
     public static String FORWARD ="F";
+    public static String BACK ="R";
 
     // Terminate Session
     public static String TERMINATE = "TERMINATE";
