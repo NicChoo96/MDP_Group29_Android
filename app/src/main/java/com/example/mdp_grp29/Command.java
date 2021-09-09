@@ -9,6 +9,18 @@ public class Command {
     // Return Robot Status to Android
     public static String STATUS ="ST";
 
+    public static String[][] REMOTE_STATUS = {
+            {"RTS", "Ready to Start"},
+            {"RS", "Robot Started"},
+            {"LFT","Looking for Target"},
+            {"F", "Moving Forward"},
+            {"B", "Moving Backward"},
+            {"TL", "Turning Left"},
+            {"TR", "Turning Right"},
+            {"STCI","Stop to Capture Image"},
+            {"C", "Robot has Completed"}
+    };
+
     // Update Robot Position and Direction
     // COMMAND:x:y:D
     public static String ROBOT_POS ="RP";
@@ -25,10 +37,15 @@ public class Command {
     public static String RIGHT = "SR";
     public static String FORWARD ="F";
     public static String BACK ="R";
+    public static String ROTATE_LEFT ="TL";
+    public static String ROTATE_RIGHT ="TR";
+
+    public static String START_EXPLORATION = "START";
 
     // Terminate Session
     public static String TERMINATE = "TERMINATE";
 
     // Capture Image
     public static String CAPTURE ="PIC";
+
 }

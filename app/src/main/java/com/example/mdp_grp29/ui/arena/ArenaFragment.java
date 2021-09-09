@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -27,9 +28,11 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.mdp_grp29.Command;
 import com.example.mdp_grp29.Constants;
 import com.example.mdp_grp29.R;
+import com.example.mdp_grp29.Vector2D;
 import com.example.mdp_grp29.arena_objects.ArenaGrid;
 import com.example.mdp_grp29.arena_objects.ArenaPersistentData;
 import com.example.mdp_grp29.arena_objects.Obstacles;
+import com.example.mdp_grp29.arena_objects.RobotCar;
 import com.example.mdp_grp29.bluetooth.BluetoothComponent;
 import com.example.mdp_grp29.bluetooth.BluetoothService;
 import com.example.mdp_grp29.databinding.FragmentArenaBinding;
@@ -45,6 +48,10 @@ public class ArenaFragment extends Fragment {
     private ImageButton downButton;
     private ImageButton leftButton;
     private ImageButton rightButton;
+    private Button startButton;
+    private Button resetBotButton;
+    private TextView robotInfoTextView;
+    private TextView obstacleInfoTextView;
 
     public static ArenaFragment instance;
     private Vibrator vibrator;
@@ -102,32 +109,53 @@ public class ArenaFragment extends Fragment {
         downButton = view.findViewById(R.id.down_button);
         leftButton = view.findViewById(R.id.left_button);
         rightButton = view.findViewById(R.id.right_button);
+        startButton = view.findViewById(R.id.start_button);
+        resetBotButton = view.findViewById(R.id.reset_robot_button);
+        robotInfoTextView = view.findViewById(R.id.robot_info_text_view);
+        obstacleInfoTextView = view.findViewById(R.id.obstacle_text_view);
+        statusHistoryLV = view.findViewById(R.id.status_history_listview);
+        statusHistoryArrayAdapter = new ArrayAdapter<>(getActivity().getApplicationContext(), R.layout.messages);
+        statusHistoryLV.setAdapter(statusHistoryArrayAdapter);
+
+        resetBotButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                arenaView.ResetRobot();
+            }
+        });
 
         upButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.MoveRobot(ArenaView.MoveArrow.UP);
+                arenaView.MoveRobot(RobotCar.MoveArrow.UP);
             }
         });
 
         downButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.MoveRobot(ArenaView.MoveArrow.DOWN);
+                arenaView.MoveRobot(RobotCar.MoveArrow.DOWN);
             }
         });
 
         leftButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.MoveRobot(ArenaView.MoveArrow.LEFT);
+                arenaView.MoveRobot(RobotCar.MoveArrow.LEFT);
             }
         });
 
         rightButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.MoveRobot(ArenaView.MoveArrow.RIGHT);
+                arenaView.MoveRobot(RobotCar.MoveArrow.RIGHT);
+            }
+        });
+
+        startButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                bluetoothComponent.sendBluetoothMessage(Command.START_EXPLORATION);
             }
         });
 
@@ -146,6 +174,31 @@ public class ArenaFragment extends Fragment {
         });
     }
 
+    public void updateRobotInfoTextView(Vector2D robotPos, int robotDirection){
+        String robotDirectionInfo = "Err";
+        switch(robotDirection){
+            case RobotCar.NORTH:
+                robotDirectionInfo = "N";
+                break;
+            case RobotCar.SOUTH:
+                robotDirectionInfo = "S";
+            break;
+            case RobotCar.WEST:
+                robotDirectionInfo = "W";
+                break;
+            case RobotCar.EAST:
+                robotDirectionInfo = "E";
+                break;
+        }
+        String robotInfo = String.format("Robot X:%d, Y:%d, Dir:%s", (int)robotPos.x, (int)robotPos.y, robotDirectionInfo);
+        robotInfoTextView.setText(robotInfo);
+    }
+
+    public void updateObstacleInfoTextView(int obstacleSelected, Vector2D obstaclePos){
+        String obstacleInfo = String.format("Obs[%d] X:%d, Y:%d", (obstacleSelected+1), (int)obstaclePos.x, (int)obstaclePos.y);
+        obstacleInfoTextView.setText(obstacleInfo);
+    }
+
     @SuppressLint("DefaultLocale")
     private String aggregateObstacleMessage(){
         String obstacleCommand = Command.OBSTACLE;
@@ -160,21 +213,36 @@ public class ArenaFragment extends Fragment {
         return obstacleCommand;
     }
 
-    public void sendRobotMovement(ArenaView.MoveArrow moveArrow){
+    public void sendRobotMovement(RobotCar.MoveArrow moveArrow){
+        String sendMessage = "";
         switch(moveArrow){
             case UP:
-                bluetoothComponent.sendBluetoothMessage(Command.FORWARD);
+                sendMessage = Command.FORWARD;
                 break;
             case LEFT:
-                bluetoothComponent.sendBluetoothMessage(Command.LEFT);
+                sendMessage = Command.ROTATE_LEFT;
                 break;
             case RIGHT:
-                bluetoothComponent.sendBluetoothMessage(Command.RIGHT);
+                sendMessage = Command.ROTATE_RIGHT;
                 break;
             case DOWN:
-                bluetoothComponent.sendBluetoothMessage(Command.BACK);
+                sendMessage = Command.BACK;
                 break;
         }
+        bluetoothComponent.sendBluetoothMessage(sendMessage);
+    }
+
+    private void updateRemoteStatus(String readMessage){
+        String command = Command.STATUS;
+        String[] status = readMessage.split(":");
+        if(readMessage.contains(command) && status.length == 2){
+            for(int i = 0; i < Command.REMOTE_STATUS.length; i++){
+                if(status[1].equals(Command.REMOTE_STATUS[i][0])){
+                    statusHistoryArrayAdapter.insert(Command.REMOTE_STATUS[i][1], 0);
+                }
+            }
+        }
+        //statusHistoryLV.setSelection(statusHistoryArrayAdapter.getCount()-1);
     }
 
     public final Handler mHandler = new Handler(Looper.myLooper()) {
@@ -213,8 +281,9 @@ public class ArenaFragment extends Fragment {
                     byte[] readBuf = (byte[]) msg.obj;
                     // Construct string from valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
-                    // Send message to MainActivity that was received in buffer
-                    //sendTextToMain(readMessage);
+
+                    updateRemoteStatus(readMessage);
+
                     Log.d("Handler Log: ", "MESSAGE_READ - " + readMessage);
                 case Constants.MESSAGE_DEVICE_NAME:
                     Log.d("Handler Log: ", "MESSAGE_DEVICE_NAME");

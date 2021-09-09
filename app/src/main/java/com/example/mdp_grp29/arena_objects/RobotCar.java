@@ -4,19 +4,23 @@ import com.example.mdp_grp29.Vector2D;
 
 public class RobotCar {
     public Vector2D robotPosition;
-    public float robotOrientationAngle;
-    public Direction robotDirection;
+    public int robotOrientationAngle;
 
-    public static enum Direction {
-        NORTH,
-        SOUTH,
-        EAST,
-        WEST,
+    public static final int NORTH = 0;
+    public static final int SOUTH = 180;
+    public static final int WEST = 270;
+    public static final int EAST = 90;
+
+    public static enum MoveArrow{
+        UP,
+        DOWN,
+        LEFT,
+        RIGHT,
         NONE
     }
 
-    public RobotCar(Vector2D robotPosition, Direction robotDirection){
+    public RobotCar(Vector2D robotPosition, int robotOrientationAngle){
         this.robotPosition = robotPosition;
-        this.robotDirection = robotDirection;
+        this.robotOrientationAngle = robotOrientationAngle;
     }
 }

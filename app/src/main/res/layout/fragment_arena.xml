@@ -20,7 +20,7 @@
         android:id="@+id/focus_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="242dp"
+        android:contentDescription="TODO"
         android:src="@mipmap/focus"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -28,14 +28,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/arenaView"
         app:layout_constraintVertical_bias="0.0"
-        tools:ignore="ImageContrastCheck"
-        android:contentDescription="TODO" />
+        tools:ignore="ImageContrastCheck" />
 
     <Button
         android:id="@+id/send_obstacles_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="10dp"
+        android:layout_marginEnd="5dp"
         android:backgroundTint="#00B893"
         android:text="@string/send_obstacle_button"
         android:textSize="12sp"
@@ -57,7 +56,7 @@
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/send_obstacles_button"
-        app:layout_constraintHorizontal_bias="0.78"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toEndOf="@+id/focus_button"
         app:layout_constraintTop_toBottomOf="@+id/arenaView"
         app:layout_constraintVertical_bias="0.0"
@@ -65,10 +64,9 @@
 
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="319dp"
+        android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
         android:layout_marginBottom="10dp"
         android:background="@drawable/rounded_corner"
         android:orientation="vertical"
@@ -76,7 +74,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/send_obstacles_button">
+        app:layout_constraintTop_toBottomOf="@+id/send_obstacles_button"
+        app:layout_constraintVertical_bias="1.0">
 
         <TextView
             android:id="@+id/statusHeader"
@@ -104,10 +103,12 @@
         android:scaleType="fitCenter"
         android:src="@drawable/uparrow"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/linearLayout"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/right_button"
+        app:layout_constraintHeight_percent="0.25"
+        app:layout_constraintStart_toEndOf="@+id/left_button"
         app:layout_constraintTop_toTopOf="@+id/gamepadImageView"
         app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintWidth_percent="0.25"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <ImageButton
@@ -118,10 +119,12 @@
         android:scaleType="fitCenter"
         android:src="@drawable/downarrow"
         app:layout_constraintBottom_toBottomOf="@+id/gamepadImageView"
-        app:layout_constraintEnd_toStartOf="@+id/linearLayout"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/gamepadImageView"
+        app:layout_constraintHeight_percent="0.25"
+        app:layout_constraintStart_toStartOf="@+id/gamepadImageView"
         app:layout_constraintTop_toBottomOf="@+id/up_button"
         app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintWidth_percent="0.25"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <ImageButton
@@ -133,9 +136,11 @@
         android:src="@drawable/leftarrow"
         app:layout_constraintBottom_toBottomOf="@+id/down_button"
         app:layout_constraintEnd_toEndOf="@+id/right_button"
+        app:layout_constraintHeight_percent="0.25"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/gamepadImageView"
         app:layout_constraintTop_toTopOf="@+id/up_button"
+        app:layout_constraintWidth_percent="0.25"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <ImageButton
@@ -147,21 +152,72 @@
         android:src="@drawable/rightarrow"
         app:layout_constraintBottom_toBottomOf="@+id/gamepadImageView"
         app:layout_constraintEnd_toEndOf="@+id/gamepadImageView"
+        app:layout_constraintHeight_percent="0.25"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toEndOf="@+id/down_button"
         app:layout_constraintTop_toTopOf="@+id/up_button"
+        app:layout_constraintWidth_percent="0.25"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <ImageView
         android:id="@+id/gamepadImageView"
         android:layout_width="193dp"
         android:layout_height="181dp"
+        android:contentDescription="TODO"
         android:scaleType="fitCenter"
         android:src="@drawable/buttons"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/linearLayout"
+        app:layout_constraintHeight_percent="0.25"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/focus_button"
-        app:layout_constraintVertical_bias="0.72" />
+        app:layout_constraintWidth_percent="0.25" />
+
+    <Button
+        android:id="@+id/reset_robot_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="246dp"
+        android:text="Rst Bot"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/up_button"
+        app:layout_constraintEnd_toStartOf="@+id/start_button"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/focus_button"
+        app:layout_constraintTop_toBottomOf="@+id/arenaView"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="2dp"
+        android:background="@drawable/rounded_corner"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/up_button"
+        app:layout_constraintEnd_toStartOf="@+id/start_button"
+        app:layout_constraintStart_toEndOf="@+id/reset_robot_button"
+        app:layout_constraintTop_toBottomOf="@+id/arenaView"
+        app:layout_constraintVertical_bias="0.0">
+
+        <TextView
+            android:id="@+id/robot_info_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginEnd="20dp"
+            android:text="Robot  X: 2, Y: 2, Dir: N"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/obstacle_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Obs[1] X: -1, Y: -1 "
+            android:textSize="14sp" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

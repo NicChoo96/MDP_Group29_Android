@@ -16,6 +16,7 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
+import com.example.mdp_grp29.Command;
 import com.example.mdp_grp29.R;
 import com.example.mdp_grp29.Vector2D;
 import com.example.mdp_grp29.arena_objects.ArenaGrid;
@@ -59,13 +60,8 @@ public class ArenaView extends View {
     private ObstacleDirectionButtons obstacleDirectionButtons;
 
     private RobotCar robotCar;
-
-    public static enum MoveArrow{
-        UP,
-        DOWN,
-        LEFT,
-        RIGHT
-    }
+    private final Vector2D robotSize = new Vector2D(3,3);
+    private final Vector2D initialRobotPos = new Vector2D(2,2);
 
     ArenaFragment arenaFragment = ArenaFragment.getInstance();
 
@@ -127,17 +123,24 @@ public class ArenaView extends View {
             initialObstacleCanvasPos[i] = new Vector2D(60f*CELL_SIZE, (i*5+6f)*CELL_SIZE);
         }
 
-        if(arenaFragment.arenaPersistentData.getObstaclesData() != null){
-            obsArray = arenaFragment.arenaPersistentData.getObstaclesData();
-        }else{
+        if(isInEditMode()){
             obsArray = new Obstacles(initialObstacleCanvasPos);
-            savePersistentData();
-        }
-
-        if(arenaFragment.arenaPersistentData.getRobotCarData() != null){
-            robotCar = arenaFragment.arenaPersistentData.getRobotCarData();
+            robotCar = new RobotCar(new Vector2D(1, 1), RobotCar.NORTH);
         }else{
-            robotCar = new RobotCar(new Vector2D(1, 1), RobotCar.Direction.NORTH);
+            if(arenaFragment.arenaPersistentData.getObstaclesData() != null){
+                obsArray = arenaFragment.arenaPersistentData.getObstaclesData();
+                //arenaFragment.updateObstacleInfoTextView(0, obsArray.getObstaclePos(0));
+            }else{
+                obsArray = new Obstacles(initialObstacleCanvasPos);
+                savePersistentData();
+            }
+
+            if(arenaFragment.arenaPersistentData.getRobotCarData() != null){
+                robotCar = arenaFragment.arenaPersistentData.getRobotCarData();
+                //arenaFragment.updateRobotInfoTextView(robotCar.robotPosition, robotCar.robotOrientationAngle);
+            }else{
+                robotCar = new RobotCar(new Vector2D(initialRobotPos.x, initialRobotPos.y), RobotCar.NORTH);
+            }
         }
 
         obstacleDirectionButtons = new ObstacleDirectionButtons();
@@ -173,7 +176,6 @@ public class ArenaView extends View {
         if(isDirectionChoosing)
             drawObstacleDirectionButtons(canvas);
 
-
         canvas.restore();
 
 //
@@ -207,63 +209,108 @@ public class ArenaView extends View {
         }
     }
     //
-    public void MoveRobot(MoveArrow move){
-        boolean robotMoved = false;
+    public void MoveRobot(RobotCar.MoveArrow move){
+
+        Vector2D robotNewMove = new Vector2D(0,0);
+
         switch(move){
             case UP:
-                if(robotCar.robotPosition.y + 2 < NUM_ROWS){
-                    robotCar.robotPosition.y += 1;
-                    robotMoved = true;
-                }
+                robotNewMove = calculateRobotMovementDirection(RobotCar.MoveArrow.UP);
                 break;
             case DOWN:
-                if(robotCar.robotPosition.y - 1 > 0){
-                    robotCar.robotPosition.y -= 1;
-                    robotMoved = true;
-                }
+                robotNewMove = calculateRobotMovementDirection(RobotCar.MoveArrow.DOWN);
                 break;
             case LEFT:
-                if(robotCar.robotPosition.x - 1 > 0){
-                    robotCar.robotPosition.x -= 1;
-                    robotMoved = true;
-                }
+                robotCar.robotOrientationAngle -= 90;
+                if(robotCar.robotOrientationAngle < 0)
+                    robotCar.robotOrientationAngle = 270;
                 break;
             case RIGHT:
-                if(robotCar.robotPosition.x + 2 < NUM_COLUMNS){
-                    robotCar.robotPosition.x += 1;
-                    robotMoved = true;
-                }
+                robotCar.robotOrientationAngle += 90;
+                if(robotCar.robotOrientationAngle > 270)
+                    robotCar.robotOrientationAngle = 0;
                 break;
         }
-        if(robotMoved){
-            arenaFragment.sendRobotMovement(move);
+
+        if(robotCar.robotPosition.x + robotNewMove.x - 1 > 0 &&
+                robotCar.robotPosition.x + robotNewMove.x < NUM_COLUMNS)
+            robotCar.robotPosition.x += robotNewMove.x;
+
+        if(robotCar.robotPosition.y + robotNewMove.y - 1 > 0 &&
+                robotCar.robotPosition.y + robotNewMove.y < NUM_ROWS)
+            robotCar.robotPosition.y += robotNewMove.y;
+
+        arenaFragment.sendRobotMovement(move);
+        arenaFragment.updateRobotInfoTextView(robotCar.robotPosition, robotCar.robotOrientationAngle);
+
+        invalidate();
+    }
+
+    private Vector2D calculateRobotMovementDirection(RobotCar.MoveArrow moveArrow){
+        Vector2D robotMovement = new Vector2D(0,0);
+
+        int isUp = 1;
+
+        // When the direction is DOWN instead of UP, the robot movement are the opposite
+        if(moveArrow == RobotCar.MoveArrow.DOWN)
+            isUp = -1;
+
+        switch(robotCar.robotOrientationAngle){
+            case RobotCar.NORTH:
+                robotMovement.y = 1 * isUp;
+                break;
+            case RobotCar.SOUTH:
+                robotMovement.y = -1 * isUp;
+                break;
+            case RobotCar.WEST:
+                robotMovement.x = -1 * isUp;
+                break;
+            case RobotCar.EAST:
+                robotMovement.x = 1 * isUp;
+                break;
         }
+
+
+        return robotMovement;
+    }
+
+    public void ResetRobot(){
+        robotCar.robotPosition.x = initialRobotPos.x;
+        robotCar.robotPosition.y = initialRobotPos.y;
+        robotCar.robotOrientationAngle = RobotCar.NORTH;
         invalidate();
     }
 
     private void DisplayRobot(Canvas canvas){
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.driverless_car5);
-        Bitmap resizeBitmap = Bitmap.createScaledBitmap(bitmap, (int)CELL_SIZE * 3, (int)CELL_SIZE * 3, false);
+        Bitmap resizeBitmap = Bitmap.createScaledBitmap(bitmap, (int)(CELL_SIZE * robotSize.x), (int)(CELL_SIZE * robotSize.y), false);
         Matrix m = new Matrix();
-        m.setRotate(robotCar.robotOrientationAngle, resizeBitmap.getWidth(), resizeBitmap.getHeight());
-        switch((int) robotCar.robotOrientationAngle){
-            case 0:
-                m.postTranslate((robotCar.robotPosition.x) * CELL_SIZE,
-                        (NUM_ROWS - robotCar.robotPosition.y - 1) * CELL_SIZE);
+        int rotation = 0;
+        Vector2D robotPostTranslate = new Vector2D(0,0);
+        switch(robotCar.robotOrientationAngle){
+            case RobotCar.NORTH:
+                robotPostTranslate = new Vector2D((robotCar.robotPosition.x - 1) * CELL_SIZE,
+                        (NUM_ROWS - robotCar.robotPosition.y) * CELL_SIZE);
+                rotation = 0;
                 break;
-            case 90:
-                m.postTranslate((robotCar.robotPosition.x - 4) * CELL_SIZE,
-                        (NUM_ROWS - robotCar.robotPosition.y - 2) * CELL_SIZE);
+            case RobotCar.EAST:
+                robotPostTranslate = new Vector2D((robotCar.robotPosition.x - 4) * CELL_SIZE,
+                        (NUM_ROWS - robotCar.robotPosition.y) * CELL_SIZE);
+                rotation = 90;
                 break;
-            case 180:
-                m.postTranslate((robotCar.robotPosition.x - 4) * CELL_SIZE,
-                        (NUM_ROWS - robotCar.robotPosition.y - 5) * CELL_SIZE);
+            case RobotCar.SOUTH:
+                robotPostTranslate = new Vector2D((robotCar.robotPosition.x - 4) * CELL_SIZE,
+                        (NUM_ROWS - robotCar.robotPosition.y - 3) * CELL_SIZE);
+                rotation = 180;
                 break;
-            case 270:
-                m.postTranslate((robotCar.robotPosition.x - 1) * CELL_SIZE,
-                        (NUM_ROWS - robotCar.robotPosition.y - 5) * CELL_SIZE);
+            case RobotCar.WEST:
+                robotPostTranslate = new Vector2D((robotCar.robotPosition.x - 1) * CELL_SIZE,
+                        (NUM_ROWS - robotCar.robotPosition.y - 3) * CELL_SIZE);
+                rotation = 270;
                 break;
         }
+        m.setRotate(rotation, resizeBitmap.getWidth(), resizeBitmap.getHeight());
+        m.postTranslate(robotPostTranslate.x, robotPostTranslate.y);
         canvas.drawBitmap(resizeBitmap, m, whitePaint);
     }
 
@@ -321,8 +368,9 @@ public class ArenaView extends View {
                 // Drag Obstacles Around
                 if(obstacleIndexSelected >= 0 && obstacleIndexSelected < obsArray.getObstacleCount()){
                     obsArray.setObstacleCanvasPos(obstacleIndexSelected, new Vector2D(x, y));
+                    arenaFragment.updateObstacleInfoTextView(obstacleIndexSelected, new Vector2D((x+CELL_SIZE/2)/CELL_SIZE,(y+CELL_SIZE/2)/CELL_SIZE));
+                    invalidate();
                 }
-                invalidate();
 
                 return;
             }else if(action == MotionEvent.ACTION_UP){
@@ -336,6 +384,7 @@ public class ArenaView extends View {
                         obsArray.setObstacleCanvasPos(obstacleIndexSelected, initialObstacleCanvasPos[obstacleIndexSelected]);
                         obsArray.setObstaclePos(obstacleIndexSelected, new Vector2D(-1, -1));
                         obsArray.setObstacleDir(obstacleIndexSelected, Obstacles.Direction.NONE);
+                        arenaFragment.updateObstacleInfoTextView(obstacleIndexSelected, new Vector2D(-1, -1));
                     }else{
                         // Obstacle New Position according to the top left of the cell
                         Vector2D obsNewPos = new Vector2D(arenaGrid.cells[(int) newObsPos.x][(int) newObsPos.y].left,
@@ -346,6 +395,7 @@ public class ArenaView extends View {
                                 obsNewPos.y
                         ));
                         obsArray.setObstaclePos(obstacleIndexSelected, arenaGrid.cells[(int) newObsPos.x][(int) newObsPos.y].position);
+                        arenaFragment.updateObstacleInfoTextView(obstacleIndexSelected, arenaGrid.cells[(int) newObsPos.x][(int) newObsPos.y].position);
                         // Setup for direction choosing buttons
                         obstacleDirectionButtons.setButtonConfig(new Vector2D(getWidth(), getHeight()));
                         isDirectionChoosing = true;
