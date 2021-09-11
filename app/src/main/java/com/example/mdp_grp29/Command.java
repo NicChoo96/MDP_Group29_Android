@@ -23,7 +23,7 @@ public class Command {
 
     // Update Robot Position and Direction
     // COMMAND:x:y:D
-    public static String ROBOT_POS ="RP";
+    public static String ROBO ="RP";
 
     // Update Obstacle Position and Direction
     // COMMAND:x:y:D:x:y:D.....

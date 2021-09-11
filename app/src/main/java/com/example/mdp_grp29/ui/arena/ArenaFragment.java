@@ -1,7 +1,13 @@
 package com.example.mdp_grp29.ui.arena;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -29,15 +35,16 @@ import com.example.mdp_grp29.Command;
 import com.example.mdp_grp29.Constants;
 import com.example.mdp_grp29.R;
 import com.example.mdp_grp29.Vector2D;
-import com.example.mdp_grp29.arena_objects.ArenaGrid;
 import com.example.mdp_grp29.arena_objects.ArenaPersistentData;
 import com.example.mdp_grp29.arena_objects.Obstacles;
 import com.example.mdp_grp29.arena_objects.RobotCar;
-import com.example.mdp_grp29.bluetooth.BluetoothComponent;
+import com.example.mdp_grp29.bluetooth.BluetoothHelper;
 import com.example.mdp_grp29.bluetooth.BluetoothService;
 import com.example.mdp_grp29.databinding.FragmentArenaBinding;
 
 public class ArenaFragment extends Fragment {
+
+    private final String TAG = "ArenaFragment";
 
     private ArenaViewModel arenaViewModel;
     private FragmentArenaBinding binding;
@@ -55,11 +62,12 @@ public class ArenaFragment extends Fragment {
 
     public static ArenaFragment instance;
     private Vibrator vibrator;
+    private Activity main;
 
     private ArrayAdapter<String> statusHistoryArrayAdapter;
     private ListView statusHistoryLV;
 
-    private BluetoothComponent bluetoothComponent;
+    private BluetoothHelper bluetoothHelper;
 
     public ArenaPersistentData arenaPersistentData = ArenaPersistentData.getInstance();
 
@@ -87,7 +95,7 @@ public class ArenaFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        bluetoothComponent = BluetoothComponent.getInstance(getActivity(), mHandler);
+        bluetoothHelper = BluetoothHelper.getInstance(getActivity(), mHandler);
     }
 
     public void vibrateDevice(int time){
@@ -102,6 +110,8 @@ public class ArenaFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState){
         super.onViewCreated(view, savedInstanceState);
 
+        main = getActivity();
+
         arenaView = view.findViewById(R.id.arenaView);
         focusButton = view.findViewById(R.id.focus_button);
         sendObsButton = view.findViewById(R.id.send_obstacles_button);
@@ -114,8 +124,12 @@ public class ArenaFragment extends Fragment {
         robotInfoTextView = view.findViewById(R.id.robot_info_text_view);
         obstacleInfoTextView = view.findViewById(R.id.obstacle_text_view);
         statusHistoryLV = view.findViewById(R.id.status_history_listview);
-        statusHistoryArrayAdapter = new ArrayAdapter<>(getActivity().getApplicationContext(), R.layout.messages);
+
+        statusHistoryArrayAdapter = arenaPersistentData.loadHistory();
+        if(statusHistoryArrayAdapter == null)
+            statusHistoryArrayAdapter = new ArrayAdapter<>(getActivity().getApplicationContext(), R.layout.statuses);
         statusHistoryLV.setAdapter(statusHistoryArrayAdapter);
+
 
         resetBotButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -155,14 +169,14 @@ public class ArenaFragment extends Fragment {
         startButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                bluetoothComponent.sendBluetoothMessage(Command.START_EXPLORATION);
+                bluetoothHelper.sendBluetoothMessage(Command.START_EXPLORATION);
             }
         });
 
         sendObsButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                bluetoothComponent.sendBluetoothMessage(aggregateObstacleMessage());
+                bluetoothHelper.sendBluetoothMessage(aggregateObstacleMessage());
             }
         });
 
@@ -229,7 +243,7 @@ public class ArenaFragment extends Fragment {
                 sendMessage = Command.BACK;
                 break;
         }
-        bluetoothComponent.sendBluetoothMessage(sendMessage);
+        bluetoothHelper.sendBluetoothMessage(sendMessage);
     }
 
     private void updateRemoteStatus(String readMessage){
@@ -237,12 +251,31 @@ public class ArenaFragment extends Fragment {
         String[] status = readMessage.split(":");
         if(readMessage.contains(command) && status.length == 2){
             for(int i = 0; i < Command.REMOTE_STATUS.length; i++){
+
                 if(status[1].equals(Command.REMOTE_STATUS[i][0])){
                     statusHistoryArrayAdapter.insert(Command.REMOTE_STATUS[i][1], 0);
+                    return;
                 }
+
             }
         }
-        //statusHistoryLV.setSelection(statusHistoryArrayAdapter.getCount()-1);
+    }
+
+    private void updateObstacleTargetImage(){
+
+    }
+
+    private void updateRemoteRobotStatus(String readMessage){
+        String command = Command.ROBO;
+        float xPos, yPos;
+        String dir;
+        String[] status = readMessage.split(":");
+        if(readMessage.contains(command) && status.length == 4){
+            xPos = Float.parseFloat(status[1]);
+            yPos = Float.parseFloat(status[2]);
+            dir = status[3];
+            arenaView.setRobotPos(new Vector2D(xPos, yPos), dir);
+        }
     }
 
     public final Handler mHandler = new Handler(Looper.myLooper()) {
@@ -254,26 +287,27 @@ public class ArenaFragment extends Fragment {
                         // Bluetooth Service: Connected to device
                         case BluetoothService.STATE_CONNECTED:
                             Log.d("Handler Log: ", "STATE_CONNECTED");
-                            bluetoothComponent.setConnectionStatus(true);
+                            bluetoothHelper.setConnectionStatus(true);
                             break;
                         // Bluetooth Service: Connecting to device
                         case BluetoothService.STATE_CONNECTING:
                             Log.d("Handler Log: ", "STATE_CONNECTING");
                             showToast("Connecting...");
-                            bluetoothComponent.setConnectionStatus(false);
+                            bluetoothHelper.setConnectionStatus(false);
                             break;
                         // Bluetooth Service: Listening for devices
                         case BluetoothService.STATE_LISTEN:
                             Log.d("Handler Log: ", "STATE_LISTEN");
-                            bluetoothComponent.setConnectionStatus(false);
+                            bluetoothHelper.setConnectionStatus(false);
                         case BluetoothService.STATE_NONE:
-                            bluetoothComponent.setConnectionStatus(false);
+                            bluetoothHelper.setConnectionStatus(false);
                             break;
-//                        // C8 - Reconnection of Bluetooth device
-//                        case BluetoothService.STATE_NONE:
-//                            Log.d("Handler Log: ", "STATE_DISCONNECTED");
-//                            Log.d(TAG, "Connection lost, attempting for reconnection...");
-//                            connectBluetoothDevice(previousConnectedAddress);
+                        // C8 - Reconnection of Bluetooth device
+                        case BluetoothService.STATE_DISCONNECTED:
+                            Log.d(TAG, "STATE_DISCONNECTED");
+                            showToast("Connection lost, attempting for reconnection...");
+                            bluetoothHelper.setConnectionStatus(false);
+                            break;
                     }
                     break;
                 case Constants.MESSAGE_READ:
@@ -283,17 +317,18 @@ public class ArenaFragment extends Fragment {
                     String readMessage = new String(readBuf, 0, msg.arg1);
 
                     updateRemoteStatus(readMessage);
+                    updateRemoteRobotStatus(readMessage);
 
                     Log.d("Handler Log: ", "MESSAGE_READ - " + readMessage);
                 case Constants.MESSAGE_DEVICE_NAME:
                     Log.d("Handler Log: ", "MESSAGE_DEVICE_NAME");
                     // Save the connected device's name
-                    bluetoothComponent.setDeviceName(msg.getData().getString(Constants.DEVICE_NAME));
-                    Log.d("Handler Log: ", "MESSAGE_DEVICE_NAME - " + bluetoothComponent.getDeviceName());
+                    bluetoothHelper.setDeviceName(msg.getData().getString(Constants.DEVICE_NAME));
+                    Log.d("Handler Log: ", "MESSAGE_DEVICE_NAME - " + bluetoothHelper.getDeviceName());
                     if (getActivity().getApplicationContext() != null) {
-                        if (bluetoothComponent.getDeviceName() != null) {
-                            showToast("Connected to: " + bluetoothComponent.getDeviceName());
-                            bluetoothComponent.setConnectionStatus(true);
+                        if (bluetoothHelper.getDeviceName() != null) {
+                            showToast("Connected to: " + bluetoothHelper.getDeviceName());
+                            bluetoothHelper.setConnectionStatus(true);
                         }
                     }
                     break;
@@ -303,8 +338,7 @@ public class ArenaFragment extends Fragment {
                         String theMsg = msg.getData().getString(Constants.TOAST);
                         if (theMsg.equalsIgnoreCase("device connection was lost")) {
                             showToast(theMsg);
-                            // Send string to MainActivity that devices lost connection
-                            bluetoothComponent.setConnectionStatus(false);
+                            bluetoothHelper.setConnectionStatus(false);
                         }
                     }
                     break;
@@ -316,5 +350,6 @@ public class ArenaFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+        arenaPersistentData.saveHistory(statusHistoryArrayAdapter);
     }
 }

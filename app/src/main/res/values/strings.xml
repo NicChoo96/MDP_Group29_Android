@@ -10,6 +10,7 @@
     <string name="avail_device_title">Available Devices</string>
     <string name="paired_device_none">No Paired Devices</string>
     <string name="avail_device_none">No Available Devices</string>
+    <string name="bt_unpair_all_btn">Unpair All Devices</string>
     <string name="bt_refresh_paired_btn">Refresh Paired Devices</string>
     <string name="bt_scan_avail_btn">Scan Devices</string>
     <string name="button_stop">Stop Scanning</string>

@@ -1,16 +1,11 @@
 package com.example.mdp_grp29;
 
-import static androidx.fragment.app.FragmentKt.setFragmentResultListener;
-
 import android.os.Bundle;
-import android.util.Log;
 
-import com.example.mdp_grp29.bluetooth.BluetoothComponent;
+import com.example.mdp_grp29.bluetooth.BluetoothHelper;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentResultListener;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -21,6 +16,8 @@ import com.example.mdp_grp29.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+
+    private BluetoothHelper bluetoothHelper;
 
     private final String TAG = "Main Activity";
 
@@ -41,18 +38,18 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
 
-        getSupportFragmentManager().setFragmentResultListener("myKey", this, new FragmentResultListener() {
-            @Override
-            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle bundle) {
-                // We use a String here, but any type that can be put in a Bundle is supported
-                String result = bundle.getString("thisNutz");
-                // Do something with the result
-                Log.e(TAG, result);
-            }
-        });
     }
 
-    public void testFunction(){
+    public void onStart() {
+        bluetoothHelper = BluetoothHelper.getInstance(this, null);
+        super.onStart();
+
+    }
+
+    public void onDestroy() {
+        if(bluetoothHelper.broadcastReceiver != null)
+            unregisterReceiver(bluetoothHelper.broadcastReceiver);
+        super.onDestroy();
 
     }
 }

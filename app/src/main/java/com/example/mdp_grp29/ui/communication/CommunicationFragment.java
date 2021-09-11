@@ -12,20 +12,17 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.motion.widget.Debug;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.appcompat.widget.Toolbar;
 
 import com.example.mdp_grp29.Constants;
 import com.example.mdp_grp29.R;
-import com.example.mdp_grp29.bluetooth.BluetoothComponent;
+import com.example.mdp_grp29.bluetooth.BluetoothHelper;
 import com.example.mdp_grp29.bluetooth.BluetoothService;
 import com.example.mdp_grp29.databinding.FragmentCommunicationBinding;
 
@@ -40,7 +37,7 @@ public class CommunicationFragment extends Fragment {
     private Button send_text_button;
     private EditText outgoing_text_edit;
 
-    private BluetoothComponent bluetoothComponent;
+    private BluetoothHelper bluetoothHelper;
 
     private final String TAG = "CommunicationFragment";
 
@@ -86,19 +83,19 @@ public class CommunicationFragment extends Fragment {
             public void onClick(View view) {
                 String outgoingText = outgoing_text_edit.getText().toString();
                 if(!outgoingText.equals("")){
-                    if (bluetoothComponent.getBluetoothService().getState() != BluetoothService.STATE_CONNECTED) {
-                        showToast("Connection Lost. Please try again." + bluetoothComponent.getBluetoothService().getState());
+                    if (bluetoothHelper.getBluetoothService().getState() != BluetoothService.STATE_CONNECTED) {
+                        showToast("Connection Lost. Please try again." + bluetoothHelper.getBluetoothService().getState());
                         // TODO: Please change the connection lost functionality below to reconnect instead of just total lost
-                        bluetoothComponent.setDeviceName("");
-                        bluetoothComponent.updateBluetoothTBStatus();
+                        bluetoothHelper.setDeviceName("");
+                        bluetoothHelper.updateBluetoothTBStatus();
                         return;
                     }
                     // Send message out
-                    bluetoothComponent.sendBluetoothMessage(outgoingText);
+                    bluetoothHelper.sendBluetoothMessage(outgoingText);
                     outgoingMessageArrayAdapter.add(outgoingText);
                     outgoingMessageLV.setSelection(outgoingMessageArrayAdapter.getCount()-1);
                     // Reset string buffer
-                    BluetoothComponent.mOutStringBuffer.setLength(0);
+                    BluetoothHelper.mOutStringBuffer.setLength(0);
                 }
             }
         });
@@ -107,24 +104,22 @@ public class CommunicationFragment extends Fragment {
     @Override
     public void onStart(){
         super.onStart();
-        bluetoothComponent = BluetoothComponent.getInstance(getActivity(), mHandler);
+        bluetoothHelper = BluetoothHelper.getInstance(getActivity(), mHandler);
 
         // Persist the view communication data after it got switched back to the communication page
-        populateExistingArrayAdapter(incomingMessageLV, incomingMessageArrayAdapter, bluetoothComponent.getPersistentIncomingComms());
-        populateExistingArrayAdapter(outgoingMessageLV, outgoingMessageArrayAdapter, bluetoothComponent.getPersistentOutgoingComms());
+        populateExistingArrayAdapter(incomingMessageLV, incomingMessageArrayAdapter, bluetoothHelper.getPersistentIncomingComms());
+        populateExistingArrayAdapter(outgoingMessageLV, outgoingMessageArrayAdapter, bluetoothHelper.getPersistentOutgoingComms());
     }
 
-    private void populateExistingArrayAdapter(ListView listView, ArrayAdapter<String> arrayAdapter, ArrayList<String> arrayList){
-        if(arrayList.size() == 0)
+    private void populateExistingArrayAdapter(ListView listView, ArrayAdapter<String> arrayAdapter, ArrayAdapter<String> persistentArray){
+        if(persistentArray == null)
             return;
-        for(int i = 0; i < arrayList.size(); i++){
-            arrayAdapter.add(arrayList.get(i));
-        }
+        arrayAdapter = persistentArray;
         listView.setSelection(arrayAdapter.getCount() - 1);
     }
 
     private void showToast(String message){
-        Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
+        Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
     }
 
     // C2 - Display connection status
@@ -138,28 +133,28 @@ public class CommunicationFragment extends Fragment {
                         // Bluetooth Service: Connected to device
                         case BluetoothService.STATE_CONNECTED:
                             Log.d("Handler Log: ", "STATE_CONNECTED");
-                            bluetoothComponent.setConnectionStatus(true);
+                            bluetoothHelper.setConnectionStatus(true);
                             break;
                         // Bluetooth Service: Connecting to device
                         case BluetoothService.STATE_CONNECTING:
                             Log.d("Handler Log: ", "STATE_CONNECTING");
                             showToast("Connecting...");
-                            bluetoothComponent.setConnectionStatus(false);
+                            bluetoothHelper.setConnectionStatus(false);
                             break;
                         // Bluetooth Service: Listening for devices
                         case BluetoothService.STATE_LISTEN:
                             Log.d("Handler Log: ", "STATE_LISTEN");
-                            bluetoothComponent.setConnectionStatus(false);
+                            bluetoothHelper.setConnectionStatus(false);
                         case BluetoothService.STATE_NONE:
                             Log.d("Handler Log: ", "STATE_NONE");
-                            bluetoothComponent.setConnectionStatus(false);
+                            bluetoothHelper.setConnectionStatus(false);
                             break;
-//                        // C8 - Reconnection of Bluetooth device
-                        // TODO: Investigate on Bluetooth Reconnection after connection lost
-//                        case BluetoothService.STATE_NONE:
-//                            Log.d("Handler Log: ", "STATE_DISCONNECTED");
-//                            Log.d(TAG, "Connection lost, attempting for reconnection...");
-//                            connectBluetoothDevice(previousConnectedAddress);
+                         // C8 - Reconnection of Bluetooth device
+                        case BluetoothService.STATE_DISCONNECTED:
+                            Log.d(TAG, "STATE_DISCONNECTED");
+                            showToast("Connection lost, attempting for reconnection...");
+                            bluetoothHelper.setConnectionStatus(false);
+                            break;
                     }
                     break;
                     // TODO: To be relocated to BluetoothComponent soon
@@ -181,9 +176,9 @@ public class CommunicationFragment extends Fragment {
                         if (theMsg.equalsIgnoreCase("device connection was lost")) {
                             showToast(theMsg);
                             // Send string to MainActivity that devices lost connection
-                            bluetoothComponent.updateBluetoothTBStatus();
+                            bluetoothHelper.updateBluetoothTBStatus();
                             // Send message to MainActivity that no device currently connected
-                            bluetoothComponent.setDeviceName("");
+                            bluetoothHelper.setDeviceName("");
                         }
                     }
                     break;
@@ -193,7 +188,7 @@ public class CommunicationFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        bluetoothComponent.storePersistentCommsData(incomingMessageArrayAdapter, outgoingMessageArrayAdapter);
+        bluetoothHelper.storePersistentCommsData(incomingMessageArrayAdapter, outgoingMessageArrayAdapter);
         super.onDestroyView();
         Log.e(TAG, "Communication Destroyed");
         binding = null;

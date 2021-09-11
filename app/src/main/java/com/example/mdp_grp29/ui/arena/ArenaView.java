@@ -79,7 +79,6 @@ public class ArenaView extends View {
         bluePaint = new Paint();
 //        facePaint = new Paint();
 //        startPaint= new Paint();
-//        robotPaint= new Paint();
 //        exploredPaint= new Paint();
 //
         // Set Display Colors
@@ -179,10 +178,6 @@ public class ArenaView extends View {
         canvas.restore();
 
 //
-//        // Create Start Zone of Robot Position
-//        // Note: Position Bottom Left = [0][0] and Robot Foot Print= [3][3]
-//        drawStartZone(canvas);
-//
 //        // Display Route Path
 //        drawRoutePath(canvas);
 
@@ -193,6 +188,25 @@ public class ArenaView extends View {
 //
 //        // Display Recognized Image from Image Recognition
 //        displayImageIdentified(canvas);
+    }
+
+    public void setRobotPos(Vector2D newPosition, String direction){
+        robotCar.robotPosition = newPosition;
+        switch(direction){
+            case "N":
+                robotCar.robotOrientationAngle = 0;
+                break;
+            case "S":
+                robotCar.robotOrientationAngle = 180;
+                break;
+            case "W":
+                robotCar.robotOrientationAngle = 270;
+                break;
+            case "E":
+                robotCar.robotOrientationAngle = 90;
+                break;
+        }
+        invalidate();
     }
 
     private class ScaleListener
