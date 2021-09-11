@@ -2,12 +2,7 @@ package com.example.mdp_grp29.ui.arena;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -59,6 +54,8 @@ public class ArenaFragment extends Fragment {
     private Button resetBotButton;
     private TextView robotInfoTextView;
     private TextView obstacleInfoTextView;
+
+    private boolean hasStarted = false;
 
     public static ArenaFragment instance;
     private Vibrator vibrator;
@@ -134,42 +131,46 @@ public class ArenaFragment extends Fragment {
         resetBotButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.ResetRobot();
+                arenaView.resetRobot();
             }
         });
 
         upButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.MoveRobot(RobotCar.MoveArrow.UP);
+                arenaView.moveRobot(RobotCar.MoveArrow.UP);
             }
         });
 
         downButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.MoveRobot(RobotCar.MoveArrow.DOWN);
+                arenaView.moveRobot(RobotCar.MoveArrow.DOWN);
             }
         });
 
         leftButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.MoveRobot(RobotCar.MoveArrow.LEFT);
+                arenaView.moveRobot(RobotCar.MoveArrow.LEFT);
             }
         });
 
         rightButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.MoveRobot(RobotCar.MoveArrow.RIGHT);
+                arenaView.moveRobot(RobotCar.MoveArrow.RIGHT);
             }
         });
 
         startButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                bluetoothHelper.sendBluetoothMessage(Command.START_EXPLORATION);
+                if(!hasStarted){
+                    bluetoothHelper.sendBluetoothMessage(Command.START_EXPLORATION);
+                }else{
+                    bluetoothHelper.sendBluetoothMessage(Command.TERMINATE);
+                }
             }
         });
 
@@ -183,7 +184,7 @@ public class ArenaFragment extends Fragment {
         focusButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.ResetArenaView();
+                arenaView.resetArenaView();
             }
         });
     }
@@ -261,8 +262,40 @@ public class ArenaFragment extends Fragment {
         }
     }
 
-    private void updateObstacleTargetImage(){
+    private void updateObstacleTargetImage(String readMessage){
+        String command = Command.TARGET;
+        float xPos, yPos;
+        String dir;
+        int imageID, obstacleIndex;
+        String[] status = readMessage.split(":");
+        if(readMessage.contains(command) && status.length == 3){
+            // Set arena obstacles target image
+            try{
+                obstacleIndex = Integer.parseInt(status[1]);
+                imageID = Integer.parseInt(status[2]);
+                arenaView.updateObstacleTargetImage(obstacleIndex-1, imageID);
+            }catch(Exception e){
+                Log.d(TAG, "Invalid Target Image Command");
+            }
+        }
+    }
 
+    private void updateExplorationStatus(String readMessage){
+        String command = Command.STATUS;
+        String[] status = readMessage.split(":");
+        if(readMessage.contains(command) && status.length == 2){
+            for(int i = 0; i < Command.REMOTE_STATUS.length; i++){
+
+                if(status[1].equals("RS")){
+                    hasStarted = true;
+                    startButton.setText("Stop");
+                }
+                else if(status[1].equals("C")){
+                    hasStarted = false;
+                    startButton.setText("Start");
+                }
+            }
+        }
     }
 
     private void updateRemoteRobotStatus(String readMessage){
@@ -316,8 +349,11 @@ public class ArenaFragment extends Fragment {
                     // Construct string from valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
 
+                    // This is where all the incoming robot messages that controls the android application
                     updateRemoteStatus(readMessage);
                     updateRemoteRobotStatus(readMessage);
+                    updateObstacleTargetImage(readMessage);
+                    updateExplorationStatus(readMessage);
 
                     Log.d("Handler Log: ", "MESSAGE_READ - " + readMessage);
                 case Constants.MESSAGE_DEVICE_NAME:

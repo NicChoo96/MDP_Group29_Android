@@ -19,6 +19,11 @@ public class RobotCar {
         NONE
     }
 
+    public void resetRobotCar(Vector2D initialPos){
+        robotPosition = initialPos;
+        robotOrientationAngle = 0;
+    }
+
     public RobotCar(Vector2D robotPosition, int robotOrientationAngle){
         this.robotPosition = robotPosition;
         this.robotOrientationAngle = robotOrientationAngle;

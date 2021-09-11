@@ -50,6 +50,24 @@ public class Obstacles
         return obstacles.length;
     }
 
+    public void setObstacleImage(int index, int imageID){
+        obstacles[index].imageID = imageID;
+    }
+
+    public int getObstacleImage(int index)
+    {
+        return obstacles[index].imageID;
+    }
+
+    public void resetObstacles(Vector2D[] initialPos){
+        for(int i = 0; i < getObstacleCount(); i++){
+            obstacles[i].position = new Vector2D(-1, -1);
+            obstacles[i].topLeftCanvasPosition = initialPos[i];
+            obstacles[i].obsDirection = Direction.NONE;
+            obstacles[i].imageID = -1;
+        }
+    }
+
     public class Obstacle
     {
         public Vector2D position;
@@ -57,6 +75,8 @@ public class Obstacles
         public Direction obsDirection;
 
         public Vector2D topLeftCanvasPosition;
+
+        public int imageID = -1;
 
         public Obstacle(Vector2D topLeftCanvasPosition, Direction obsDirection){
             this.topLeftCanvasPosition = topLeftCanvasPosition;

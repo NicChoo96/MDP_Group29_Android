@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -16,7 +15,6 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import com.example.mdp_grp29.Command;
 import com.example.mdp_grp29.R;
 import com.example.mdp_grp29.Vector2D;
 import com.example.mdp_grp29.arena_objects.ArenaGrid;
@@ -65,6 +63,44 @@ public class ArenaView extends View {
 
     ArenaFragment arenaFragment = ArenaFragment.getInstance();
 
+    // All target character images
+    int[] images = new int[]{
+            // Bullseye
+            R.drawable.bulleyes,     // Image ID =0
+            // Arrow
+            R.drawable.blue_left,           // Image ID =1
+            R.drawable.red_down,            // Image ID =2
+            R.drawable.green_right,         // Image ID =3
+            R.drawable.white_up,            // Image ID =4
+            // Go
+            R.drawable.yellow_circle,       // Image ID =5
+            // Number
+            R.drawable.blue_1,              // Image ID =6
+            R.drawable.green_2,             // Image ID =7
+            R.drawable.red_3,               // Image ID =8
+            R.drawable.white_4,             // Image ID =9
+            R.drawable.yellow_5,            // Image ID =10
+            R.drawable.blue_6,              // Image ID =11
+            R.drawable.green_7,              // Image ID =12
+            R.drawable.red_8,               // Image ID = 13
+            R.drawable.white_9,               // Image ID = 14
+            // Alphabet
+            R.drawable.red_a,             // Image ID =15
+            R.drawable.green_b,           // Image ID =16
+            R.drawable.white_c,           // Image ID =17
+            R.drawable.blue_d,            // Image ID =18
+            R.drawable.yellow_e,           // Image ID =19
+            R.drawable.red_f,           // Image ID =20
+            R.drawable.green_g,           // Image ID =21
+            R.drawable.white_h,           // Image ID =22
+            R.drawable.blue_s,           // Image ID =23
+            R.drawable.red_u,           // Image ID =24
+            R.drawable.white_w,           // Image ID =25
+            R.drawable.blue_x,           // Image ID =26
+            R.drawable.yellow_y,           // Image ID =27
+            R.drawable.red_z,           // Image ID =28
+    };
+
     // Constructor
     public ArenaView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -101,14 +137,6 @@ public class ArenaView extends View {
 //        // Set Display Layout
 //        blackPaint.setStrokeWidth(WALL_THICKNESS);
         whitePaint.setTextSize(15);
-//
-//        // Starting shown obstacle on screen
-//        for(int i = 0; i < 5;i++){
-//            obstacleViewArray.add(new ObstacleView(i+6,5, (i+1)));
-//        }
-//
-//        // Display Maze
-//        createMaze();
 
 
         CELL_SIZE = Math.abs(getWidth() / NUM_COLUMNS - 10);
@@ -151,7 +179,7 @@ public class ArenaView extends View {
         arenaFragment.arenaPersistentData.saveData(obsArray, robotCar);
     }
 
-    public void ResetArenaView()
+    public void resetArenaView()
     {
         mScaleFactor = 1.f;
         invalidate();
@@ -170,7 +198,7 @@ public class ArenaView extends View {
         drawGrid(canvas);
         drawObstacles(canvas);
         drawObstacleDirectionFaces(canvas);
-        DisplayRobot(canvas);
+        displayRobot(canvas);
 
         if(isDirectionChoosing)
             drawObstacleDirectionButtons(canvas);
@@ -186,8 +214,8 @@ public class ArenaView extends View {
 //        // Display Explored Maze
 //        //drawExploredObstacles(canvas);
 //
-//        // Display Recognized Image from Image Recognition
-//        displayImageIdentified(canvas);
+        // Display Recognized Target Images from Image Recognition
+        displayImageOnObstacles(canvas);
     }
 
     public void setRobotPos(Vector2D newPosition, String direction){
@@ -223,7 +251,7 @@ public class ArenaView extends View {
         }
     }
     //
-    public void MoveRobot(RobotCar.MoveArrow move){
+    public void moveRobot(RobotCar.MoveArrow move){
 
         Vector2D robotNewMove = new Vector2D(0,0);
 
@@ -260,6 +288,44 @@ public class ArenaView extends View {
         invalidate();
     }
 
+    public void resetAllArenaObjects()
+    {
+        obsArray.resetObstacles(initialObstacleCanvasPos);
+        robotCar.resetRobotCar(initialRobotPos);
+        invalidate();
+        arenaFragment.updateRobotInfoTextView(robotCar.robotPosition, robotCar.robotOrientationAngle);
+        arenaFragment.updateObstacleInfoTextView(0, new Vector2D(-1, -1));
+    }
+
+    public void updateObstacleTargetImage(int obstacleIndex, int imageID){
+        if(obstacleIndex < 0 || obstacleIndex >= obsArray.getObstacleCount()){
+            Log.d(TAG, "Invalid obstacle index given!");
+            return;
+        }
+        obsArray.setObstacleImage(obstacleIndex, imageID);
+        invalidate();
+    }
+
+    // Display Recognised Image
+    private void displayImageOnObstacles(Canvas canvas) {
+        for (int i = 0; i < obsArray.getObstacleCount(); i++) {
+            if(obsArray.getObstacleImage(i) != -1)
+            {
+                if(obsArray.getObstacleImage(i) >= images.length){
+                    Log.d(TAG, "Image ID is invalid at Obstacle " + i);
+                    continue;
+                }
+                Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
+                        images[obsArray.getObstacleImage(i)]);
+                Bitmap resizeBitmap = Bitmap.createScaledBitmap(bitmap, (int)CELL_SIZE,
+                        (int)CELL_SIZE, false);
+                int x = (int)(obsArray.getObstaclePos(i).x * CELL_SIZE + 1);
+                int y = (int)((NUM_ROWS - obsArray.getObstaclePos(i).y - 1) * CELL_SIZE);
+                canvas.drawBitmap(resizeBitmap, obsArray.getObstacleCanvasPos(i).x, obsArray.getObstacleCanvasPos(i).y, whitePaint);
+            }
+        }
+    }
+
     private Vector2D calculateRobotMovementDirection(RobotCar.MoveArrow moveArrow){
         Vector2D robotMovement = new Vector2D(0,0);
 
@@ -288,14 +354,14 @@ public class ArenaView extends View {
         return robotMovement;
     }
 
-    public void ResetRobot(){
+    public void resetRobot(){
         robotCar.robotPosition.x = initialRobotPos.x;
         robotCar.robotPosition.y = initialRobotPos.y;
         robotCar.robotOrientationAngle = RobotCar.NORTH;
         invalidate();
     }
 
-    private void DisplayRobot(Canvas canvas){
+    private void displayRobot(Canvas canvas){
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.driverless_car5);
         Bitmap resizeBitmap = Bitmap.createScaledBitmap(bitmap, (int)(CELL_SIZE * robotSize.x), (int)(CELL_SIZE * robotSize.y), false);
         Matrix m = new Matrix();
@@ -328,7 +394,7 @@ public class ArenaView extends View {
         canvas.drawBitmap(resizeBitmap, m, whitePaint);
     }
 
-    private void ViewMovement(MotionEvent event){
+    private void viewMovement(MotionEvent event){
         if(event.getPointerCount() ==  2)
             mScaleDetector.onTouchEvent(event);
     }
@@ -354,7 +420,7 @@ public class ArenaView extends View {
     private int mActivePointedId = MotionEvent.INVALID_POINTER_ID;
     private int obstacleIndexSelected = -1;
 
-    private void DragObstacle(MotionEvent event){
+    private void dragObstacle(MotionEvent event){
 
         final int action = event.getActionMasked();
 
@@ -423,7 +489,7 @@ public class ArenaView extends View {
         }
     }
 
-    private void ChooseObstacleDirection(MotionEvent event){
+    private void chooseObstacleDirection(MotionEvent event){
         final int action = event.getActionMasked();
         Obstacles.Direction chosenDirection = Obstacles.Direction.NONE;
 
@@ -454,56 +520,16 @@ public class ArenaView extends View {
         // *** The order of the if statements matters because of the buffer lock
 
         if(isDirectionChoosing)
-            ChooseObstacleDirection(event);
+            chooseObstacleDirection(event);
         if(!isDirectionChoosing && directionUI_BufferLock){
             directionUI_BufferLock = false;
             return true;
         }
         if(!isDirectionChoosing){
-            ViewMovement(event);
-            DragObstacle(event);
+            viewMovement(event);
+            dragObstacle(event);
         }
         return true;
-//        // Place Robot Position
-//        if (!mapFragment.getEnablePlotRobotPosition()) {
-//            int x = 0;
-//            int y = 0;
-//
-//            // Able to drag obstacles around
-//            if(event.getAction() == MotionEvent.ACTION_MOVE){
-//                x = (int) (event.getX() / cellWidth);
-//                y = NUM_ROWS - 1 - (int) (event.getY() / cellHeight);
-//                obstacleViewArray.get(currentSelectedObstacle).x = x;
-//                obstacleViewArray.get(currentSelectedObstacle).y = y;
-//                mapFragment.updateObstacleTextView(currentSelectedObstacle);
-//                invalidate();
-//            }
-//            // On release to finalize obstacle position
-//            if(event.getAction() == MotionEvent.ACTION_UP){
-//                x = obstacleViewArray.get(currentSelectedObstacle).x;
-//                y = obstacleViewArray.get(currentSelectedObstacle).y;
-//                mapFragment.updateObstacleTextView(currentSelectedObstacle);
-//            }
-//        } else if (mapFragment.getEnablePlotRobotPosition()) {
-//            if(event.getAction() == MotionEvent.ACTION_DOWN){
-//                int x = (int) (event.getX() / cellWidth);
-//                int y = NUM_ROWS - 1 - (int) (event.getY() / cellHeight);
-//
-//                if (x == NUM_COLUMNS - 1)
-//                    x = NUM_COLUMNS - 2;
-//                else if (y == NUM_ROWS - 1)
-//                    y = NUM_ROWS - 2;
-//
-//                if (x == robotCenter[0] && y == robotCenter[1])
-//                    updateRobotCoords(-1, -1, angle);
-//                else
-//                    updateRobotCoords(x, y, angle);
-//
-//                mapFragment.setRobotPosition(robotCenter, angle);
-//                invalidate();
-//            }
-//        }
-        //return true;
     }
 
     private void drawGrid(Canvas canvas){
