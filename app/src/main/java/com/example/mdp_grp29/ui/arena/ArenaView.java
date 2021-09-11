@@ -37,6 +37,7 @@ public class ArenaView extends View {
     private Paint bluePaint;
     private Paint facePaint;
     private Paint grayPaint;
+    private Paint startPaint;
 
     private float zoomScale = 30f;
     private float originalScale;
@@ -51,7 +52,7 @@ public class ArenaView extends View {
     private Vector2D[] initialObstacleCanvasPos = new Vector2D[obstacleCount];
 
     private ArenaGrid arenaGrid;
-    private final Vector2D arenaGridOffSet = new Vector2D(30f, 30f);
+    private final Vector2D arenaGridOffSet = new Vector2D(30f, 5f);
 
     private boolean isDirectionChoosing;
     private boolean directionUI_BufferLock = false;
@@ -59,7 +60,7 @@ public class ArenaView extends View {
 
     private RobotCar robotCar;
     private final Vector2D robotSize = new Vector2D(3,3);
-    private final Vector2D initialRobotPos = new Vector2D(2,2);
+    private final Vector2D initialRobotPos = new Vector2D(1,1);
 
     ArenaFragment arenaFragment = ArenaFragment.getInstance();
 
@@ -68,11 +69,11 @@ public class ArenaView extends View {
             // Bullseye
             R.drawable.bulleyes,     // Image ID =0
             // Arrow
-            R.drawable.blue_left,           // Image ID =1
+            R.drawable.white_up,           // Image ID =1
             R.drawable.red_down,            // Image ID =2
             R.drawable.green_right,         // Image ID =3
-            R.drawable.white_up,            // Image ID =4
-            // Go
+            R.drawable.blue_left,            // Image ID =4
+            // Stop
             R.drawable.yellow_circle,       // Image ID =5
             // Number
             R.drawable.blue_1,              // Image ID =6
@@ -94,11 +95,13 @@ public class ArenaView extends View {
             R.drawable.green_g,           // Image ID =21
             R.drawable.white_h,           // Image ID =22
             R.drawable.blue_s,           // Image ID =23
-            R.drawable.red_u,           // Image ID =24
-            R.drawable.white_w,           // Image ID =25
-            R.drawable.blue_x,           // Image ID =26
-            R.drawable.yellow_y,           // Image ID =27
-            R.drawable.red_z,           // Image ID =28
+            R.drawable.yellow_t,           // Image ID =24
+            R.drawable.red_u,           // Image ID =25
+            R.drawable.green_v,           // Image ID =26
+            R.drawable.white_w,           // Image ID =27
+            R.drawable.blue_x,           // Image ID =28
+            R.drawable.yellow_y,           // Image ID =29
+            R.drawable.red_z,           // Image ID =30
     };
 
     // Constructor
@@ -113,6 +116,7 @@ public class ArenaView extends View {
         grayPaint = new Paint();
         transparentPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         bluePaint = new Paint();
+        startPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 //        facePaint = new Paint();
 //        startPaint= new Paint();
 //        exploredPaint= new Paint();
@@ -130,8 +134,8 @@ public class ArenaView extends View {
         transparentPaint.setColor(Color.TRANSPARENT);
         transparentPaint.setAlpha(120);
 
-//        facePaint.setColor(Color.RED);
-//        startPaint.setColor(Color.parseColor("#A4FEFF"));    // Aqua
+        startPaint.setColor(Color.parseColor("#A4FEFF"));    // Aqua
+        startPaint.setAlpha(120);
 //        exploredPaint.setColor(Color.parseColor("#2B6EFE")); // Indigo-Blue
 //
 //        // Set Display Layout
@@ -156,7 +160,6 @@ public class ArenaView extends View {
         }else{
             if(arenaFragment.arenaPersistentData.getObstaclesData() != null){
                 obsArray = arenaFragment.arenaPersistentData.getObstaclesData();
-                //arenaFragment.updateObstacleInfoTextView(0, obsArray.getObstaclePos(0));
             }else{
                 obsArray = new Obstacles(initialObstacleCanvasPos);
                 savePersistentData();
@@ -164,9 +167,9 @@ public class ArenaView extends View {
 
             if(arenaFragment.arenaPersistentData.getRobotCarData() != null){
                 robotCar = arenaFragment.arenaPersistentData.getRobotCarData();
-                //arenaFragment.updateRobotInfoTextView(robotCar.robotPosition, robotCar.robotOrientationAngle);
             }else{
                 robotCar = new RobotCar(new Vector2D(initialRobotPos.x, initialRobotPos.y), RobotCar.NORTH);
+                savePersistentData();
             }
         }
 
@@ -196,6 +199,7 @@ public class ArenaView extends View {
         canvas.drawColor(Color.WHITE);
 
         drawGrid(canvas);
+        drawStartZone(canvas);
         drawObstacles(canvas);
         drawObstacleDirectionFaces(canvas);
         displayRobot(canvas);
@@ -217,6 +221,15 @@ public class ArenaView extends View {
         // Display Recognized Target Images from Image Recognition
         displayImageOnObstacles(canvas);
     }
+
+    // Create Start Zone
+    private void drawStartZone(Canvas canvas) {
+        for (int i = 0; i <= 3; i++)
+            for (int j = 0; j <= 3; j++)
+                canvas.drawRect(i * CELL_SIZE + arenaGridOffSet.x, (NUM_ROWS - 1 - j) * CELL_SIZE + 5f,
+                        (i + 1) * CELL_SIZE + arenaGridOffSet.x, (NUM_ROWS - j) * CELL_SIZE + 5f, startPaint);
+    }
+
 
     public void setRobotPos(Vector2D newPosition, String direction){
         robotCar.robotPosition = newPosition;
@@ -274,12 +287,12 @@ public class ArenaView extends View {
                 break;
         }
 
-        if(robotCar.robotPosition.x + robotNewMove.x - 1 > 0 &&
-                robotCar.robotPosition.x + robotNewMove.x < NUM_COLUMNS)
+        if(robotCar.robotPosition.x + robotNewMove.x - 1 >= 0 &&
+                robotCar.robotPosition.x + robotNewMove.x < NUM_COLUMNS-1)
             robotCar.robotPosition.x += robotNewMove.x;
 
-        if(robotCar.robotPosition.y + robotNewMove.y - 1 > 0 &&
-                robotCar.robotPosition.y + robotNewMove.y < NUM_ROWS)
+        if(robotCar.robotPosition.y + robotNewMove.y - 1 >= 0 &&
+                robotCar.robotPosition.y + robotNewMove.y < NUM_ROWS-1)
             robotCar.robotPosition.y += robotNewMove.y;
 
         arenaFragment.sendRobotMovement(move);
@@ -369,23 +382,23 @@ public class ArenaView extends View {
         Vector2D robotPostTranslate = new Vector2D(0,0);
         switch(robotCar.robotOrientationAngle){
             case RobotCar.NORTH:
-                robotPostTranslate = new Vector2D((robotCar.robotPosition.x - 1) * CELL_SIZE,
-                        (NUM_ROWS - robotCar.robotPosition.y) * CELL_SIZE);
+                robotPostTranslate = new Vector2D((robotCar.robotPosition.x) * CELL_SIZE + 3f,
+                        (NUM_ROWS - robotCar.robotPosition.y - 2) * CELL_SIZE + 3f);
                 rotation = 0;
                 break;
             case RobotCar.EAST:
-                robotPostTranslate = new Vector2D((robotCar.robotPosition.x - 4) * CELL_SIZE,
-                        (NUM_ROWS - robotCar.robotPosition.y) * CELL_SIZE);
+                robotPostTranslate = new Vector2D((robotCar.robotPosition.x - 3) * CELL_SIZE + 2f,
+                        (NUM_ROWS - robotCar.robotPosition.y - 2) * CELL_SIZE + 3f);
                 rotation = 90;
                 break;
             case RobotCar.SOUTH:
-                robotPostTranslate = new Vector2D((robotCar.robotPosition.x - 4) * CELL_SIZE,
-                        (NUM_ROWS - robotCar.robotPosition.y - 3) * CELL_SIZE);
+                robotPostTranslate = new Vector2D((robotCar.robotPosition.x - 3) * CELL_SIZE + 3f,
+                        (NUM_ROWS - robotCar.robotPosition.y - 5) * CELL_SIZE + 3f);
                 rotation = 180;
                 break;
             case RobotCar.WEST:
-                robotPostTranslate = new Vector2D((robotCar.robotPosition.x - 1) * CELL_SIZE,
-                        (NUM_ROWS - robotCar.robotPosition.y - 3) * CELL_SIZE);
+                robotPostTranslate = new Vector2D((robotCar.robotPosition.x) * CELL_SIZE + 3f,
+                        (NUM_ROWS - robotCar.robotPosition.y - 5) * CELL_SIZE + 3f);
                 rotation = 270;
                 break;
         }
@@ -558,13 +571,17 @@ public class ArenaView extends View {
         }
 
         for(int i = 0; i < NUM_COLUMNS; i++){
-            canvas.drawText((i+1)+"", i * CELL_SIZE + arenaGridOffSet.x + 5f,
-                    arenaGridOffSet.y - 4f, blackPaint);
+            canvas.drawText(i+"", i * CELL_SIZE + arenaGridOffSet.x + 5f,
+                    NUM_COLUMNS * CELL_SIZE + arenaGridOffSet.y + CELL_SIZE - 4f, blackPaint);
         }
 
         for(int i = 0; i < NUM_ROWS; i++){
-            canvas.drawText((i+1)+"", arenaGridOffSet.x - 20f,
-                    i * CELL_SIZE + arenaGridOffSet.y + 15f, blackPaint);
+            if(NUM_ROWS - i - 1 > 9)
+                canvas.drawText((NUM_ROWS - i - 1)+"", arenaGridOffSet.x - 20f,
+                        i * CELL_SIZE + arenaGridOffSet.y + 15f, blackPaint);
+            else
+                canvas.drawText((NUM_ROWS - i - 1)+"", arenaGridOffSet.x - 15f,
+                        i * CELL_SIZE + arenaGridOffSet.y + 15f, blackPaint);
         }
     }
 

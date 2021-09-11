@@ -93,6 +93,12 @@ public class ArenaFragment extends Fragment {
     public void onStart() {
         super.onStart();
         bluetoothHelper = BluetoothHelper.getInstance(getActivity(), mHandler);
+        if(arenaPersistentData.getRobotCarData() != null){
+            updateRobotInfoTextView(arenaPersistentData.getRobotCarData().robotPosition, arenaPersistentData.getRobotCarData().robotOrientationAngle);
+        }
+        if(arenaPersistentData.getObstaclesData() != null){
+            updateObstacleInfoTextView(0, arenaPersistentData.getObstaclesData().getObstaclePos(0));
+        }
     }
 
     public void vibrateDevice(int time){

@@ -40,7 +40,7 @@ public class ArenaGrid {
         cells = new ArenaCell[col][row];
         for(int x = 0; x < col; x++){
             for(int y = 0; y < row; y++){
-                cells[x][y] = new ArenaCell(new Vector2D(x+1, y+1));
+                cells[x][y] = new ArenaCell(new Vector2D(x, row-y-1));
             }
         }
     }

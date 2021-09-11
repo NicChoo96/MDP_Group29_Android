@@ -192,6 +192,7 @@
         android:layout_marginTop="5dp"
         android:layout_marginEnd="2dp"
         android:background="@drawable/rounded_corner"
+        android:gravity="center"
         android:orientation="horizontal"
         android:padding="10dp"
         app:layout_constraintBottom_toTopOf="@+id/up_button"
