@@ -39,7 +39,7 @@ public class ArenaView extends View {
     private Paint grayPaint;
     private Paint startPaint;
 
-    private float zoomScale = 30f;
+    private float zoomScale = 0f;
     private float originalScale;
     private final float touchMargin = 10f;
 
@@ -142,16 +142,21 @@ public class ArenaView extends View {
 //        blackPaint.setStrokeWidth(WALL_THICKNESS);
         whitePaint.setTextSize(15);
 
-
-        CELL_SIZE = Math.abs(getWidth() / NUM_COLUMNS - 10);
-        originalScale = getWidth() / NUM_COLUMNS - 5f;
-
         mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
 
         arenaGrid = new ArenaGrid(NUM_ROWS, NUM_COLUMNS, arenaGridOffSet);
+    }
+
+    @Override
+    protected void onSizeChanged(int xNew, int yNew, int xOld, int yOld){
+        super.onSizeChanged(xNew, yNew, xOld, yOld);
+
+        CELL_SIZE = Math.abs(getWidth() / NUM_COLUMNS - 10) -3f;
+
+        originalScale = CELL_SIZE;
 
         for(int i = 0; i < obstacleCount; i++){
-            initialObstacleCanvasPos[i] = new Vector2D(60f*CELL_SIZE, (i*5+6f)*CELL_SIZE);
+            initialObstacleCanvasPos[i] = new Vector2D((NUM_COLUMNS+3f)*CELL_SIZE, (i+1)*2f*CELL_SIZE);
         }
 
         if(isInEditMode()){
@@ -174,7 +179,6 @@ public class ArenaView extends View {
         }
 
         obstacleDirectionButtons = new ObstacleDirectionButtons();
-
         invalidate();
     }
 
@@ -197,7 +201,7 @@ public class ArenaView extends View {
         canvas.scale(mScaleFactor, mScaleFactor, mScaleDetector.getFocusX() * 2f, mScaleDetector.getFocusY() * 2f);
 
         canvas.drawColor(Color.WHITE);
-
+        drawObstacleTextView(canvas);
         drawGrid(canvas);
         drawStartZone(canvas);
         drawObstacles(canvas);
@@ -499,6 +503,19 @@ public class ArenaView extends View {
                 mActivePointedId = MotionEvent.INVALID_POINTER_ID;
 
             }
+        }
+    }
+
+    private void drawObstacleTextView(Canvas canvas){
+
+        int obstaclePosX, obstaclePosY;
+        for(int i = 0; i < obsArray.getObstacleCount(); i++){
+            obstaclePosX = (int)obsArray.getObstaclePos(i).x;
+            obstaclePosY = (int)obsArray.getObstaclePos(i).y;
+            canvas.drawText((i+1) + ") X: " + obstaclePosX+
+                    " Y: " + obstaclePosY + " Dir: " + obsArray.getObstacleDir(i),
+                    (NUM_COLUMNS+2f) * CELL_SIZE,
+                    (i+14f)*CELL_SIZE, blackPaint);
         }
     }
 

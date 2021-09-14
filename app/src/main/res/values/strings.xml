@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MDP_Grp29</string>
+    <string name="app_name">MDP Grp29</string>
     <string name="title_arena">Arena</string>
     <string name="title_dashboard">Bluetooth</string>
     <string name="title_notifications">Communication</string>
@@ -19,7 +19,7 @@
     <string name="textview_outgoing_text">Outgoing Text</string>
     <string name="button_send_text">Send</string>
     <string name="placeholder_send_text">Input outgoing text</string>
-    <string name="send_obstacle_button">Send Obstacles</string>
+    <string name="send_obstacle_button">Send OBS</string>
     <string name="start_button">Start</string>
     <string name="status_header">Status History</string>
 </resources>
