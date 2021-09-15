@@ -33,6 +33,7 @@ public class ArenaView extends View {
     private Paint mapPaint;
     private Paint whitePaint;
     private Paint blackPaint;
+    private Paint obstacleTextPaint;
     private Paint transparentPaint;
     private Paint bluePaint;
     private Paint facePaint;
@@ -110,8 +111,9 @@ public class ArenaView extends View {
 
         // Create Objects
         mapPaint= new Paint();
-        whitePaint= new Paint();
-        blackPaint= new Paint();
+        whitePaint= new Paint(Paint.ANTI_ALIAS_FLAG);
+        blackPaint= new Paint(Paint.ANTI_ALIAS_FLAG);
+        obstacleTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         facePaint = new Paint();
         grayPaint = new Paint();
         transparentPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -128,6 +130,7 @@ public class ArenaView extends View {
         whitePaint.setColor(Color.WHITE);
         grayPaint.setColor(Color.GRAY);
         blackPaint.setColor(Color.BLACK);
+        obstacleTextPaint.setColor(Color.BLACK);
         bluePaint.setColor(Color.BLUE);
         facePaint.setColor(Color.RED);
         transparentPaint.setStyle(Paint.Style.FILL);
@@ -154,6 +157,13 @@ public class ArenaView extends View {
         CELL_SIZE = Math.abs(getWidth() / NUM_COLUMNS - 10) -3f;
 
         originalScale = CELL_SIZE;
+
+
+        // Calculate the desired size as a proportion of our testTextSize.
+        float desiredTextSize = 500f * CELL_SIZE/getWidth();
+        Log.d(TAG, "Desired Text: " + desiredTextSize);
+        // Set the paint for that size.
+        obstacleTextPaint.setTextSize(desiredTextSize);
 
         for(int i = 0; i < obstacleCount; i++){
             initialObstacleCanvasPos[i] = new Vector2D((NUM_COLUMNS+3f)*CELL_SIZE, (i+1)*2f*CELL_SIZE);
@@ -460,8 +470,6 @@ public class ArenaView extends View {
                 final float x = event.getX(pointerIndex);
                 final float y = event.getY(pointerIndex);
 
-                Log.d(TAG, "Finger: " + x + ", " + y);
-
                 // Drag Obstacles Around
                 if(obstacleIndexSelected >= 0 && obstacleIndexSelected < obsArray.getObstacleCount()){
                     obsArray.setObstacleCanvasPos(obstacleIndexSelected, new Vector2D(x, y));
@@ -515,7 +523,7 @@ public class ArenaView extends View {
             canvas.drawText((i+1) + ") X: " + obstaclePosX+
                     " Y: " + obstaclePosY + " Dir: " + obsArray.getObstacleDir(i),
                     (NUM_COLUMNS+2f) * CELL_SIZE,
-                    (i+14f)*CELL_SIZE, blackPaint);
+                    (i+14f)*CELL_SIZE, obstacleTextPaint);
         }
     }
 
@@ -588,17 +596,17 @@ public class ArenaView extends View {
         }
 
         for(int i = 0; i < NUM_COLUMNS; i++){
-            canvas.drawText(i+"", i * CELL_SIZE + arenaGridOffSet.x + 5f,
-                    NUM_COLUMNS * CELL_SIZE + arenaGridOffSet.y + CELL_SIZE - 4f, blackPaint);
+            canvas.drawText(i+"", i * CELL_SIZE + arenaGridOffSet.x + 13f,
+                    NUM_COLUMNS * CELL_SIZE + arenaGridOffSet.y + CELL_SIZE - 8f, blackPaint);
         }
 
         for(int i = 0; i < NUM_ROWS; i++){
             if(NUM_ROWS - i - 1 > 9)
                 canvas.drawText((NUM_ROWS - i - 1)+"", arenaGridOffSet.x - 20f,
-                        i * CELL_SIZE + arenaGridOffSet.y + 15f, blackPaint);
+                        i * CELL_SIZE + arenaGridOffSet.y + 22f, blackPaint);
             else
                 canvas.drawText((NUM_ROWS - i - 1)+"", arenaGridOffSet.x - 15f,
-                        i * CELL_SIZE + arenaGridOffSet.y + 15f, blackPaint);
+                        i * CELL_SIZE + arenaGridOffSet.y + 22f, blackPaint);
         }
     }
 
