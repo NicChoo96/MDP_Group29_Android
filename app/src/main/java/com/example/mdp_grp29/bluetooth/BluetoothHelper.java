@@ -83,6 +83,14 @@ public class BluetoothHelper {
         }
     }
 
+    public boolean getServiceManualDisconnect(){
+        return bluetoothService.isManualDisconnect;
+    }
+
+    public void setServiceManualDisconnect(boolean status){
+        bluetoothService.isManualDisconnect = status;
+    }
+
     public void connectBluetoothDevice(String address){
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         final BluetoothDevice deviceMac = bluetoothAdapter.getRemoteDevice(address);
@@ -90,6 +98,7 @@ public class BluetoothHelper {
     }
 
     public void disconnectBluetoothDevice(){
+        setServiceManualDisconnect(true);
         bluetoothService.stop();
     }
 

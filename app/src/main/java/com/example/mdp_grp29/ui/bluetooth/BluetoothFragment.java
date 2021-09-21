@@ -72,8 +72,6 @@ public class BluetoothFragment extends Fragment {
     private ArrayAdapter<String> newDevicesArrayAdapter, pairedDevicesArrayAdapter;
     private CountDownTimer scanTimer;
 
-    private boolean isManualDisconnect = false;
-
     // Variables
     private boolean isReconnecting = false;
 
@@ -182,7 +180,6 @@ public class BluetoothFragment extends Fragment {
         btnDisconnect.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                isManualDisconnect = true;
                 bluetoothHelper.disconnectBluetoothDevice();
             }
         });
@@ -510,6 +507,7 @@ public class BluetoothFragment extends Fragment {
                     break;
                 case BluetoothDevice.ACTION_ACL_CONNECTED:
                     Log.d(TAG, "bReceiver: ACTION_ACL_CONNECTED");
+
                     break;
                 case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
                     Log.d(TAG, "bReceiver: ACTION_ACL_DISCONNECT_REQUESTED");
@@ -520,12 +518,11 @@ public class BluetoothFragment extends Fragment {
                         if(progress.isShowing()){
                             progress.dismiss();
                     }else{
-                        if(!isManualDisconnect){
+                        if(!bluetoothHelper.getServiceManualDisconnect()){
                             showToast("Connection has been lost, attempting to reconnect...");
                             //bluetoothHelper.connectBluetoothDevice(bluetoothHelper.previousConnectedAddress);
                         }
                     }
-                    isManualDisconnect = false;
                     updateBluetoothUI(false);
                     break;
             }

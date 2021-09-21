@@ -34,7 +34,7 @@ public class BluetoothService {
 
     private BluetoothSocket reconnectSocket = null;
 
-    private boolean isManualDisconnect = false;
+    public boolean isManualDisconnect = false;
 
 
     // Constants that indicate the current connection state
@@ -202,11 +202,11 @@ public class BluetoothService {
             bundle.putString(Constants.TOAST, "Device disconnected");
             mCurrentState = STATE_NONE;
 
-            isManualDisconnect = false;
         }else{
             mCurrentState = STATE_DISCONNECTED;
             bundle.putString(Constants.TOAST, "Device connection lost");
         }
+        isManualDisconnect = false;
         // Start the service over to restart listening mode
         BluetoothService.this.start();
         msg.setData(bundle);
@@ -371,22 +371,46 @@ public class BluetoothService {
         public void run(){
             BluetoothSocket socket = null;
             // Keep listening until exception occurs or a socket is returned.
-            while (true) {
+
+            while(mCurrentState != STATE_CONNECTED){
                 try {
                     socket = mmServerSocket.accept();
                 } catch (IOException e) {
-                    Log.e(TAG, "Socket's accept() method failed", e);
+                    Log.e(TAG, "Socket Type: " + mSocketType + "accept() failed", e);
                     break;
                 }
-
                 if (socket != null) {
-                    // A connection was accepted. Perform work associated with
-                    // the connection in a separate thread.
-                    //manageMyConnectedSocket(socket);
-                    connected(socket, previousConnectedDevice, mSocketType);
-                    break;
+                    synchronized (BluetoothService.this){
+                        switch(mCurrentState){
+                            case STATE_LISTEN:
+                            case STATE_CONNECTING:
+                            case STATE_DISCONNECTED:
+                                if(previousConnectedDevice != null){
+                                    Log.e(TAG, "Connected back");
+                                    connected(socket, previousConnectedDevice, mSocketType);
+                                }else{
+                                    Log.e(TAG, "No Previous Connected Device");
+                                }
+                                break;
+                            case STATE_CONNECTED:
+                                if(isManualDisconnect){
+                                    try {
+                                        Log.e(TAG, "Socket Closed");
+                                        socket.close();
+                                        isManualDisconnect = false;
+                                    } catch (IOException e) {
+                                        Log.e(TAG, "Could not close unwanted socket", e);
+                                    }
+                                    break;
+                                }
+                        }
+                    }
                 }
             }
+            Log.e(TAG, "AcceptThread Ended, socket type: " + mSocketType);
+
+
+
         }
 
         // Closes the connect socket and causes the thread to finish.

@@ -314,6 +314,8 @@ public class ArenaFragment extends Fragment {
             yPos = Float.parseFloat(status[2]);
             dir = status[3];
             arenaView.setRobotPos(new Vector2D(xPos, yPos), dir);
+            String robotInfo = String.format("Robot X:%d, Y:%d, Dir:%s", (int)xPos, (int)yPos, dir);
+            robotInfoTextView.setText(robotInfo);
         }
     }
 
