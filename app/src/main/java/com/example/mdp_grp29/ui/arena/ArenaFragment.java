@@ -184,6 +184,7 @@ public class ArenaFragment extends Fragment {
             @Override
             public void onClick(View view){
                 bluetoothHelper.sendBluetoothMessage(aggregateObstacleMessage());
+                showToast("Obstacle Info Sent to Server!");
             }
         });
 
@@ -280,6 +281,8 @@ public class ArenaFragment extends Fragment {
                 obstacleIndex = Integer.parseInt(status[1]);
                 imageID = Integer.parseInt(status[2]);
                 arenaView.updateObstacleTargetImage(obstacleIndex-1, imageID);
+                statusHistoryArrayAdapter.insert("Updated Obs Id: " + obstacleIndex + " to Image Id: " + imageID, 0);
+                showToast("Updated captured image!");
             }catch(Exception e){
                 Log.d(TAG, "Invalid Target Image Command");
             }

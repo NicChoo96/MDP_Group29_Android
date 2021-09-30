@@ -12,12 +12,10 @@ public class Command {
     public static String[][] REMOTE_STATUS = {
             {"RTS", "Ready to Start"},
             {"RS", "Robot Started"},
-            {"LFT","Looking for Target"},
-            {"F", "Moving Forward"},
-            {"B", "Moving Backward"},
-            {"TL", "Turning Left"},
-            {"TR", "Turning Right"},
+            {"PLAN","Planning route for next Obstacle"},
+            {"MOV", "Moving"},
             {"STCI","Stop to Capture Image"},
+            {"IC","Image Captured"},
             {"C", "Robot has Completed"}
     };
 
