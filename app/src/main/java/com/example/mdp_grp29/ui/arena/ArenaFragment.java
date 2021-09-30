@@ -224,12 +224,16 @@ public class ArenaFragment extends Fragment {
     private String aggregateObstacleMessage(){
         String obstacleCommand = Command.OBSTACLE;
         Obstacles currentObstacles = arenaPersistentData.getObstaclesData();
-
+        String directionOutput = "";
         for(int i = 0; i < currentObstacles.getObstacleCount(); i++){
+            if(currentObstacles.getObstacleDir(i) == Obstacles.Direction.NONE)
+                directionOutput = "X";
+            else
+                directionOutput = currentObstacles.getObstacleDir(i).toString().charAt(0) + "";
             obstacleCommand += String.format(":%d:%d:%s",
                     (int)currentObstacles.getObstaclePos(i).x,
                     (int)currentObstacles.getObstaclePos(i).y,
-                    currentObstacles.getObstacleDir(i).toString());
+                    directionOutput);
         }
         return obstacleCommand;
     }
