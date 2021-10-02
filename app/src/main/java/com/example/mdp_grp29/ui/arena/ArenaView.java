@@ -49,7 +49,10 @@ public class ArenaView extends View {
     private float mScaleFactor = 1.f;
 
     public Obstacles obsArray;
-    public final int obstacleCount = 5;
+    public final int obstacleCount = 8;
+    private final int obstacleColumns = 2;
+    private final int obstacleRows = 4;
+
     private Vector2D[] initialObstacleCanvasPos = new Vector2D[obstacleCount];
 
     private ArenaGrid arenaGrid;
@@ -165,8 +168,10 @@ public class ArenaView extends View {
         // Set the paint for that size.
         obstacleTextPaint.setTextSize(desiredTextSize);
 
-        for(int i = 0; i < obstacleCount; i++){
-            initialObstacleCanvasPos[i] = new Vector2D((NUM_COLUMNS+3f)*CELL_SIZE, (i+1)*2f*CELL_SIZE);
+        for(int i = 0; i < obstacleColumns; i++){
+            for(int j = 0; j < obstacleRows; j++){
+                initialObstacleCanvasPos[i*obstacleRows + j] = new Vector2D((NUM_COLUMNS+2f + (i*2))*CELL_SIZE, (j+1)*2f*CELL_SIZE);
+            }
         }
 
         if(isInEditMode()){
@@ -522,7 +527,7 @@ public class ArenaView extends View {
             obstaclePosY = (int)obsArray.getObstaclePos(i).y;
             canvas.drawText((i+1) + ") X: " + obstaclePosX+
                     " Y: " + obstaclePosY + " Dir: " + obsArray.getObstacleDir(i),
-                    (NUM_COLUMNS+2f) * CELL_SIZE,
+                    (NUM_COLUMNS+1f) * CELL_SIZE,
                     (i+14f)*CELL_SIZE, obstacleTextPaint);
         }
     }
