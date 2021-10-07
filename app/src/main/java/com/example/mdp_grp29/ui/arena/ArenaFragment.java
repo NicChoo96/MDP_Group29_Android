@@ -51,7 +51,7 @@ public class ArenaFragment extends Fragment {
     private ImageButton leftButton;
     private ImageButton rightButton;
     private Button startButton;
-    private Button resetBotButton;
+    private Button resetArenaButton;
     private TextView robotInfoTextView;
     private TextView obstacleInfoTextView;
 
@@ -123,7 +123,7 @@ public class ArenaFragment extends Fragment {
         leftButton = view.findViewById(R.id.left_button);
         rightButton = view.findViewById(R.id.right_button);
         startButton = view.findViewById(R.id.start_button);
-        resetBotButton = view.findViewById(R.id.reset_robot_button);
+        resetArenaButton = view.findViewById(R.id.reset_button);
         robotInfoTextView = view.findViewById(R.id.robot_info_text_view);
         obstacleInfoTextView = view.findViewById(R.id.obstacle_text_view);
         statusHistoryLV = view.findViewById(R.id.status_history_listview);
@@ -134,10 +134,11 @@ public class ArenaFragment extends Fragment {
         statusHistoryLV.setAdapter(statusHistoryArrayAdapter);
 
 
-        resetBotButton.setOnClickListener(new View.OnClickListener(){
+        resetArenaButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                arenaView.resetRobot();
+                statusHistoryArrayAdapter.clear();
+                arenaView.resetAllArenaObjects();
             }
         });
 
@@ -268,7 +269,6 @@ public class ArenaFragment extends Fragment {
                     statusHistoryArrayAdapter.insert(Command.REMOTE_STATUS[i][1], 0);
                     return;
                 }
-
             }
         }
     }

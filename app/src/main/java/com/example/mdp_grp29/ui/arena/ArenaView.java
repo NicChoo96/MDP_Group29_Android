@@ -161,9 +161,8 @@ public class ArenaView extends View {
 
         originalScale = CELL_SIZE;
 
-
         // Calculate the desired size as a proportion of our testTextSize.
-        float desiredTextSize = 500f * CELL_SIZE/getWidth();
+        float desiredTextSize = 480f * CELL_SIZE/getWidth();
         Log.d(TAG, "Desired Text: " + desiredTextSize);
         // Set the paint for that size.
         obstacleTextPaint.setTextSize(desiredTextSize);
@@ -323,7 +322,9 @@ public class ArenaView extends View {
     public void resetAllArenaObjects()
     {
         obsArray.resetObstacles(initialObstacleCanvasPos);
-        robotCar.resetRobotCar(initialRobotPos);
+        robotCar.robotPosition.x = initialRobotPos.x;
+        robotCar.robotPosition.y = initialRobotPos.y;
+        robotCar.robotOrientationAngle = RobotCar.NORTH;
         invalidate();
         arenaFragment.updateRobotInfoTextView(robotCar.robotPosition, robotCar.robotOrientationAngle);
         arenaFragment.updateObstacleInfoTextView(0, new Vector2D(-1, -1));
@@ -384,13 +385,6 @@ public class ArenaView extends View {
 
 
         return robotMovement;
-    }
-
-    public void resetRobot(){
-        robotCar.robotPosition.x = initialRobotPos.x;
-        robotCar.robotPosition.y = initialRobotPos.y;
-        robotCar.robotOrientationAngle = RobotCar.NORTH;
-        invalidate();
     }
 
     private void displayRobot(Canvas canvas){
@@ -527,8 +521,8 @@ public class ArenaView extends View {
             obstaclePosY = (int)obsArray.getObstaclePos(i).y;
             canvas.drawText((i+1) + ") X: " + obstaclePosX+
                     " Y: " + obstaclePosY + " Dir: " + obsArray.getObstacleDir(i),
-                    (NUM_COLUMNS+1f) * CELL_SIZE,
-                    (i+14f)*CELL_SIZE, obstacleTextPaint);
+                    (NUM_COLUMNS+2f) * CELL_SIZE,
+                    (i+12f)*CELL_SIZE, obstacleTextPaint);
         }
     }
 
