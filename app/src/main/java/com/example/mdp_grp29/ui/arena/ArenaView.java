@@ -472,13 +472,14 @@ public class ArenaView extends View {
                 // Drag Obstacles Around
                 if(obstacleIndexSelected >= 0 && obstacleIndexSelected < obsArray.getObstacleCount()){
                     obsArray.setObstacleCanvasPos(obstacleIndexSelected, new Vector2D(x, y));
-                    arenaFragment.updateObstacleInfoTextView(obstacleIndexSelected, new Vector2D((x+CELL_SIZE/2)/CELL_SIZE,(y+CELL_SIZE/2)/CELL_SIZE));
+                    Vector2D obstaclePos = new Vector2D((x+CELL_SIZE/2)/CELL_SIZE,(NUM_ROWS-(y+CELL_SIZE/2)/CELL_SIZE));
+                    arenaFragment.updateObstacleInfoTextView(obstacleIndexSelected, obstaclePos);
+                    obsArray.setObstaclePos(obstacleIndexSelected, obstaclePos);
                     invalidate();
                 }
 
                 return;
             }else if(action == MotionEvent.ACTION_UP){
-
                 // Check for obstacles being dragged out of screen
                 if(obstacleIndexSelected != -1){
                     // Record collided grid cell position with obstacle
@@ -494,12 +495,9 @@ public class ArenaView extends View {
                         Vector2D obsNewPos = new Vector2D(arenaGrid.cells[(int) newObsPos.x][(int) newObsPos.y].left,
                                 arenaGrid.cells[(int) newObsPos.x][(int) newObsPos.y].top);
                         // Move Obstacle Canvas Position to latest
-                        obsArray.setObstacleCanvasPos(obstacleIndexSelected, new Vector2D(
-                                obsNewPos.x,
-                                obsNewPos.y
-                        ));
-                        obsArray.setObstaclePos(obstacleIndexSelected, arenaGrid.cells[(int) newObsPos.x][(int) newObsPos.y].position);
-                        arenaFragment.updateObstacleInfoTextView(obstacleIndexSelected, arenaGrid.cells[(int) newObsPos.x][(int) newObsPos.y].position);
+                        obsArray.setObstacleCanvasPos(obstacleIndexSelected, obsNewPos);
+//                        obsArray.setObstaclePos(obstacleIndexSelected, arenaGrid.cells[(int) newObsPos.x][(int) newObsPos.y].position);
+//                        arenaFragment.updateObstacleInfoTextView(obstacleIndexSelected, arenaGrid.cells[(int) newObsPos.x][(int) newObsPos.y].position);
                         // Setup for direction choosing buttons
                         obstacleDirectionButtons.setButtonConfig(new Vector2D(getWidth(), getHeight()));
                         isDirectionChoosing = true;

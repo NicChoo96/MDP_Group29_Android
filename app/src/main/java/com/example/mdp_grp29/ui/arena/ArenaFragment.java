@@ -173,11 +173,8 @@ public class ArenaFragment extends Fragment {
         startButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                if(!hasStarted){
-                    bluetoothHelper.sendBluetoothMessage(Command.START_EXPLORATION);
-                }else{
-                    bluetoothHelper.sendBluetoothMessage(Command.TERMINATE);
-                }
+                bluetoothHelper.sendBluetoothMessage(Command.START_EXPLORATION);
+                statusHistoryArrayAdapter.insert("Start command sent to the server!", 0);
             }
         });
 
@@ -293,24 +290,6 @@ public class ArenaFragment extends Fragment {
         }
     }
 
-    private void updateExplorationStatus(String readMessage){
-        String command = Command.STATUS;
-        String[] status = readMessage.split(":");
-        if(readMessage.contains(command) && status.length == 2){
-            for(int i = 0; i < Command.REMOTE_STATUS.length; i++){
-
-                if(status[1].equals("RS")){
-                    hasStarted = true;
-                    startButton.setText("Stop");
-                }
-                else if(status[1].equals("C")){
-                    hasStarted = false;
-                    startButton.setText("Start");
-                }
-            }
-        }
-    }
-
     private void updateRemoteRobotStatus(String readMessage){
         String command = Command.ROBO;
         float xPos, yPos;
@@ -368,7 +347,6 @@ public class ArenaFragment extends Fragment {
                     updateRemoteStatus(readMessage);
                     updateRemoteRobotStatus(readMessage);
                     updateObstacleTargetImage(readMessage);
-                    updateExplorationStatus(readMessage);
 
                     Log.d("Handler Log: ", "MESSAGE_READ - " + readMessage);
                 case Constants.MESSAGE_DEVICE_NAME:
